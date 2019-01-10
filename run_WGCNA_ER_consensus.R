@@ -1,12 +1,12 @@
 ##################Consensus Network WGCNA####################
 # Consensus performed between Downs syndrome microarray data in cortex regions (CBC, DFC, FC, IPC, ITC, MFC, OFC, S1C, STC, V1C) from GSE59630,
-# Alzheimer's RNA seq data in temporal cortex from Mayo Clinic, and Alzheimer's microarray data in frontal cortex from Zhang 
+# Alzheimer's RNA seq data in temporal cortex from Mayo Clinic, and Alzheimer's microarray data in frontal cortex from Zhang
 setwd("~/WGCNA")
 getwd()
 library(WGCNA)
 library(flashClust)
 library(gplots)
-library(cluster) 
+library(cluster)
 library(igraph); #for part 8
 library(RColorBrewer); #for part 8
 options(stringsAsFactors=FALSE)
@@ -33,7 +33,7 @@ gset <- getGEO("GSE59630", GSEMatrix =TRUE, AnnotGPL=FALSE)
 if (length(gset) > 1) idx <- grep("GPL5175", attr(gset, "names")) else idx <- 1
 gset <- gset[[idx]]
 
-# make proper column names to match toptable 
+# make proper column names to match toptable
 fvarLabels(gset) <- make.names(fvarLabels(gset))
 
 # group names for all samples
@@ -76,7 +76,7 @@ datExpr = as.data.frame(exprs(gset));
 targets.ALL.select  = targets.ALL[!(targets.ALL$region == "HIP"),]
 #remove extra columns
 targets.ALL.select = as.data.frame(targets.ALL.select)
-targets.ALL.select2 = targets.ALL.select[ , which(names(targets.ALL.select) %in% c("geo_accession","disease status:ch1", 
+targets.ALL.select2 = targets.ALL.select[ , which(names(targets.ALL.select) %in% c("geo_accession","disease status:ch1",
                                                               "age:ch1", "region:ch1", "Sex:ch1"))]
 #remove hippocampus regions from expression
 targets.ALL.HIP  = targets.ALL[(targets.ALL$region == "HIP"),]
@@ -84,7 +84,7 @@ GSM = targets.ALL.HIP$geo_accession;
 datExpr.select = datExpr[ , -which(names(datExpr) %in% c(GSM))]
 
 #gene IDs are affymetrix, convert to ensembl:
-annot=read.csv("/home/erebboah/WGCNA/ensembl_GEO.csv")
+annot=read.csv("/home/erebboah/WGCNA/ensembl_GEO.csv") #could not do this cause I don't have this file fml
 expr = as.integer(rownames(datExpr.select));
 ensembl = annot$From;
 ind=intersect(ensembl, expr)
@@ -96,22 +96,20 @@ datExpr_ENSGID=collapseRows(datExpr.select.subset, annot1$To, as.character(annot
 save(datExpr_ENSGID, targets.ALL.select2, file="datExpr_GSE59630.rda")
 
 #########################################################################
-#AD data input (temporal cortex)
-load("/home/vivek/AMP_AD/Mayo/Analysis/Step04_WGCNA/Discovery_Set/AD/rWGCNA_Mayo_ForPreservation.rda") #Alzheimer's data
-#make expression and target variables for AD
-datExpr.Ref.AD_1 = datExpr.Ref
-targets.Ref.AD_1 = targets.Ref
+#Mayo Clinic data:
+load(file="data/MAYO_TCX_Expression_metaData.rda")
+datExpr.Ref.MAYO <- t(normExpr.TCX)
+targets.Ref.MAYO <- targets.TCX
 
-#AD data input #2 (frontal cortex)
-load("/home/vivek/AD/Zhang/Zhang_Regressed.rda")
-datExpr.Ref.AD_2 = t(normExpr.reg);
-targets.Ref.AD_2 = targets; 
+#Mt. Sinai data:
+load(file = "data/MSSM_FP_STG_PHG_IFG_Expression_metaData.rda")
+datExpr.Ref.MSSM <- t(normExpr.MSSM)
+targets.Ref.MSSM <- targets.MSSM
 
-#DS data input
-load("datExpr_GSE59630.rda") 
-#Make sure genes in columns and samples in rows, make variables for expression and target variables for DS
-datExpr.Ref.DS=t(datExpr_ENSGID);
-targets.Ref.DS=targets.ALL.select2;
+#ROSMAP data:
+load(file = "data/ROSMAP_DLPFC_expression_metaData.rda")
+datExpr.Ref.ROSMAP <- t(normExpr.ROSMAP)
+targets.Ref.ROSMAP <- targets.ROSMAP
 
 #Use only intersecting genes - 11810 tot intersect. DS has 110 samples, AD_1 has 104, AD_2 has 465
 gnS=intersect(colnames(datExpr.Ref.DS),intersect(colnames(datExpr.Ref.AD_1),colnames(datExpr.Ref.AD_2)))
@@ -125,7 +123,7 @@ setLabels=c("Downs syndrome samples", "Alzheimer's samples 1", "Alzheimer's samp
 #Form multi-set expression data
 multiExpr = vector(mode="list", length=nSets)
 
-#Remove rownames and column names from datExpr dfs, re-assign in multiExpr 
+#Remove rownames and column names from datExpr dfs, re-assign in multiExpr
 genes = colnames(datExpr.Ref.DS);
 samples = rownames(datExpr.Ref.DS);
 rownames(datExpr.Ref.DS)=NULL;
@@ -165,12 +163,12 @@ multiMeta=list(aging = list(data=targets.Ref.DS), AD1 = list(data=targets.Ref.AD
 gsg = goodSamplesGenesMS(multiExpr, verbose = 3);
 gsg$allOK
 
-#If NOT all ok - 
+#If NOT all ok -
 if (!gsg$allOK)
 {
   # Print information about the removed genes:
   if (sum(!gsg$goodGenes) > 0)
-    printFlush(paste("Removing genes:", paste(names(multiExpr[[1]]$data)[!gsg$goodGenes], 
+    printFlush(paste("Removing genes:", paste(names(multiExpr[[1]]$data)[!gsg$goodGenes],
                                               collapse = ", ")))
   for (set in 1:exprSize$nSets)
   {
@@ -187,8 +185,8 @@ if (!gsg$allOK)
 #Save everything
 nGenes=exprSize$nGenes;
 nSamples=exprSize$nSamples;
-save(multiExpr, multiMeta, nGenes, nSamples, setLabels, 
-     targets.Ref.AD_1, targets.Ref.AD_2, targets.Ref.DS, 
+save(multiExpr, multiMeta, nGenes, nSamples, setLabels,
+     targets.Ref.AD_1, targets.Ref.AD_2, targets.Ref.DS,
      datExpr.Ref.AD_1, datExpr.Ref.AD_2, datExpr.Ref.DS, file = "Consensus_dataInput_112418.rda");
 #=====================================================================================
 #
@@ -286,7 +284,7 @@ save(list=ls(),file="consensus_112418.rda")
 
 consMEs = net$multiMEs;
 moduleColors = net$colors;
-table(moduleColors) 
+table(moduleColors)
 
 load("ConsensusTOM-block.1.rda") # consensus TOM
 consTree= hclust(1-consTomDS,method="average");
@@ -306,7 +304,7 @@ PC2_Sequencing=as.numeric(targets.Ref.AD_1$Seq.PC2)
 Brain.Bank=as.numeric(factor(targets.Ref.AD_1$Source))
 Gender=as.numeric(factor(targets.Ref.AD_1$Gender))
 
-geneSigsAD1=matrix(NA,nrow=7,ncol=ncol(datExpr.Ref.AD_1)) 
+geneSigsAD1=matrix(NA,nrow=7,ncol=ncol(datExpr.Ref.AD_1))
 for(i in 1:ncol(geneSigsAD1)) {
   exprvec=as.numeric(datExpr.Ref.AD_1[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
@@ -338,7 +336,7 @@ Age=as.numeric(targets.Ref.AD_2$Age)
 GEO=as.numeric(factor(targets.Ref.AD_2$geo_accession))
 Gender=as.numeric(factor(targets.Ref.AD_2$Sex))
 
-geneSigsAD2=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.AD_2)) 
+geneSigsAD2=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.AD_2))
 for(i in 1:ncol(geneSigsAD2)) {
   exprvec=as.numeric(datExpr.Ref.AD_2[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
@@ -358,13 +356,13 @@ rownames(geneSigsAD2)=c("Age","Gender","Diagnosis", "GEO")
 
 ###############################DS########################################
 targets.Ref.DS$Age = c("0", "0", "0", "0", "0.333", "0.333", "0.333", "0.5", "0.5", "0.5",
-                       "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", 
+                       "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833",
                        "0.833", "0.833", "0.833", "1", "1", "2", "2", "3", "3", "3",
-                       "3", "3", "8", "8", "8", "15", "15", "15", "15", "18", 
+                       "3", "3", "8", "8", "8", "15", "15", "15", "15", "18",
                        "18", "18", "22", "22", "22", "30", "30", "30", "30", "30",
-                       "30", "42", "42", "42", "42", "0", "0", "0", "0", "0.083", 
+                       "30", "42", "42", "42", "42", "0", "0", "0", "0", "0.083",
                        "0.083", "0.083", "0.5", "0.5", "0.5", "0.5", "0.5", "0.5", "0.75", "0.75",
-                       "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "1.17", "1.17", 
+                       "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "1.17", "1.17",
                        "3", "3", "3", "3", "3", "2", "2", "10", "10", "10",
                        "13", "13", "13", "13", "19", "19", "19", "22", "22", "22",
                        "39", "39", "39", "39", "39", "39", "40", "40", "40", "40")
@@ -374,14 +372,14 @@ Gender=as.numeric(factor(targets.Ref.DS$Sex))
 Diagnosis = as.numeric(factor(targets.Ref.DS$disease))
 Region = as.numeric(factor(targets.Ref.DS$region))
 
-geneSigsDS=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.DS)) 
+geneSigsDS=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.DS))
 for(i in 1:ncol(geneSigsAD2)) {
   exprvec=as.numeric(datExpr.Ref.DS[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
   sexr=bicor(exprvec, Gender,use="pairwise.complete.obs")
   conditionr=bicor(exprvec, Diagnosis,use="pairwise.complete.obs")
   regionr=bicor(Region,exprvec,use="pairwise.complete.obs")
-  
+
   geneSigsDS[,i]=c(ager, sexr,conditionr,regionr)
   cat('Done for gene...',i,'\n')
 }
@@ -404,7 +402,7 @@ for (minModSize in c(40,100,160)) {
       tree = cutreeHybrid(dendro = consTree, pamStage=FALSE,
                           minClusterSize = minModSize, cutHeight = 0.99999999,
                           deepSplit = ds, distM = as.matrix(1-consTomDS))
-      
+
       merged <- mergeCloseModules(exprData = multiExpr,colors = tree$labels,
                                   cutHeight = dthresh)
       mColorh <- cbind(mColorh,labels2colors(merged$colors))
@@ -413,7 +411,7 @@ for (minModSize in c(40,100,160)) {
   }
 }
 
-# Plotting modules for each set of params and traits 
+# Plotting modules for each set of params and traits
 mColorh1=cbind(mColorh,geneSigsAD1[1,],geneSigsAD1[2,],geneSigsAD1[3,],geneSigsAD1[4,],geneSigsAD1[5,],geneSigsAD1[6,],geneSigsAD1[7,],
                geneSigsAD2[1,], geneSigsAD2[2,], geneSigsAD2[3,], geneSigsAD2[4,],
                geneSigsDS[1,], geneSigsDS[2,], geneSigsDS[3,], geneSigsDS[4,])
@@ -468,7 +466,7 @@ pdf("ConsensusTOM_FinalDendro_DSAD_diag_112718.pdf",height=10,width=16)
 plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network with power = 16, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
 dev.off()
 
-# Convert numerical lables to colors for labeling of modules 
+# Convert numerical lables to colors for labeling of modules
 MEColors=labels2colors(as.numeric(substring(names(MEs_DS), 3)));
 MEColorNames = paste("ME", MEColors, sep="");
 
@@ -484,7 +482,7 @@ consKME1=consensusKME(multiExpr=multiExpr, moduleColor.cons,
 #Consensus kMEs:
 consensus.KMEs=consKME1[,regexpr('consensus.kME',names(consKME1))>0]
 
-save(consensus.KMEs, consKME1, multiExpr, MEColorNames, moduleColor.cons, consTree, 
+save(consensus.KMEs, consKME1, multiExpr, MEColorNames, moduleColor.cons, consTree,
      MEs_DS, MEs_AD1, MEs_AD2, file="Consensus_MEs_112418.rda")
 
 #=====================================================================================
@@ -551,7 +549,7 @@ txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 
 txtMat1 <- signif( moduleTraitCor_AD1,2)
 #we only want to look at pearson correlations in certain range
-txtMat1[txtMat1> -0.3&txtMat1<0.2] <- "" 
+txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_AD1),nrow=nrow(moduleTraitPvalue_AD1))
 
@@ -574,8 +572,8 @@ labeledHeatmap( Matrix = moduleTraitCor_AD1,
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs_AD1, "Eigengene Network", marHeatmap = c(3,4,2,2), 
-                      marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE, 
+plotEigengeneNetworks(MEs_AD1, "Eigengene Network", marHeatmap = c(3,4,2,2),
+                      marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
 #Plot boxplots, scatterplots
@@ -620,7 +618,7 @@ txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 
 txtMat1 <- signif( moduleTraitCor_AD2,2)
 #we only want to look at pearson correlations in certain range
-txtMat1[txtMat1> -0.3&txtMat1<0.2] <- "" 
+txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_AD2),nrow=nrow(moduleTraitPvalue_AD2))
 
@@ -643,8 +641,8 @@ labeledHeatmap( Matrix = moduleTraitCor_AD2,
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs_AD2, "Eigengene Network", marHeatmap = c(3,4,2,2), 
-                      marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE, 
+plotEigengeneNetworks(MEs_AD2, "Eigengene Network", marHeatmap = c(3,4,2,2),
+                      marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
 #Plot boxplots, scatterplots
@@ -665,13 +663,13 @@ nSamples = nrow(datExpr.Ref.DS);
 nGenes = ncol(datExpr.Ref.DS);
 
 targets.Ref.DS$Age = c("0", "0", "0", "0", "0.333", "0.333", "0.333", "0.5", "0.5", "0.5",
-                       "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", 
+                       "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833",
                        "0.833", "0.833", "0.833", "1", "1", "2", "2", "3", "3", "3",
-                       "3", "3", "8", "8", "8", "15", "15", "15", "15", "18", 
+                       "3", "3", "8", "8", "8", "15", "15", "15", "15", "18",
                        "18", "18", "22", "22", "22", "30", "30", "30", "30", "30",
-                       "30", "42", "42", "42", "42", "0", "0", "0", "0", "0.083", 
+                       "30", "42", "42", "42", "42", "0", "0", "0", "0", "0.083",
                        "0.083", "0.083", "0.5", "0.5", "0.5", "0.5", "0.5", "0.5", "0.75", "0.75",
-                       "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "1.17", "1.17", 
+                       "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "1.17", "1.17",
                        "3", "3", "3", "3", "3", "2", "2", "10", "10", "10",
                        "13", "13", "13", "13", "19", "19", "19", "22", "22", "22",
                        "39", "39", "39", "39", "39", "39", "40", "40", "40", "40")
@@ -699,7 +697,7 @@ txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 
 txtMat1 <- signif( moduleTraitCor_DS,2)
 #we only want to look at pearson correlations in certain range
-txtMat1[txtMat1> -0.3&txtMat1<0.2] <- "" 
+txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_DS),nrow=nrow(moduleTraitPvalue_DS))
@@ -745,7 +743,7 @@ write.csv(moduleTraitCor,'moduleTraitCor_DSAD_112418.csv')
 
 #=====================================================================================
 #
-#  Part 6: GO analysis 
+#  Part 6: GO analysis
 #
 #=====================================================================================
 # Makes bar plots of top enriched GO terms for each module
@@ -809,7 +807,7 @@ for(i in 1:length(uniquemodcolors)){
     barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
     abline(v=2,col="red")
     }
-  
+
   cat('Done ...',thismod,'\n')
 }
 
@@ -817,7 +815,7 @@ dev.off()
 
 #=====================================================================================
 #
-#  Part 7: Cell type enrichment 
+#  Part 7: Cell type enrichment
 #
 #=====================================================================================
 geneInfo=read.csv('geneInfo.cons.DSAD_112418.csv')
@@ -942,24 +940,24 @@ for (mod in uniquemodcolors)  {
   #Identify the columns in the TOM that correspond to these hub probes
   matchind = match(submatrix$Ensembl.Gene.ID,colnames(multiExpr));
   reducedTOM = TOM.matrix[matchind,matchind];
-  
+
   orderind = order(reducedTOM,decreasing=TRUE);
   connections2keep = orderind[1:numconnections2keep];
   reducedTOM = matrix(0,nrow(reducedTOM),ncol(reducedTOM));
   reducedTOM[connections2keep] = 1;
-  
+
   g0 <- graph.adjacency(as.matrix(reducedTOM[1:10,1:10]),mode="undirected",weighted=TRUE,diag=FALSE)
   layoutMata <- layout.circle(g0)
-  
+
   g0 <- graph.adjacency(as.matrix(reducedTOM[11:50,11:50]),mode="undirected",weighted=TRUE,diag=FALSE)
   layoutMatb <- layout.circle(g0)
-  
+
   g0 <- graph.adjacency(as.matrix(reducedTOM[51:ncol(reducedTOM),51:ncol(reducedTOM)]),mode="undirected",weighted=TRUE,diag=FALSE)
   layoutMatc <- layout.circle(g0)
   g1 <- graph.adjacency(as.matrix(reducedTOM),mode="undirected",weighted=TRUE,diag=FALSE)
   layoutMat <- rbind(layoutMata*0.25,layoutMatb*0.8, layoutMatc)
 
   plot(g1,edge.color="grey",vertex.color=mod,vertex.label=as.character(submatrix$GeneSymbol),vertex.label.cex=0.7,vertex.label.dist=0.45,vertex.label.degree=-pi/4,vertex.label.color="black",layout= layoutMat,vertex.size=submatrix[,colind]^2*8,main=paste(mod,"module"))
-  
+
 }
 dev.off();
