@@ -97,71 +97,51 @@ save(datExpr_ENSGID, targets.ALL.select2, file="datExpr_GSE59630.rda")
 
 #########################################################################
 #Mayo Clinic data:
-load(file="data/MAYO_TCX_Expression_metaData.rda")
+load(file="~/data/MAYO_TCX_Expression_metaData.rda")
 datExpr.Ref.MAYO <- t(normExpr.TCX)
 targets.Ref.MAYO <- targets.TCX
 
 #Mt. Sinai data:
-load(file = "data/MSSM_FP_STG_PHG_IFG_Expression_metaData.rda")
+load(file = "~/data/MSSM_FP_STG_PHG_IFG_Expression_metaData.rda")
 datExpr.Ref.MSSM <- t(normExpr.MSSM)
 targets.Ref.MSSM <- targets.MSSM
 
 #ROSMAP data:
-load(file = "data/ROSMAP_DLPFC_expression_metaData.rda")
+load(file = "~/data/ROSMAP_DLPFC_expression_metaData.rda")
 datExpr.Ref.ROSMAP <- t(normExpr.ROSMAP)
 targets.Ref.ROSMAP <- targets.ROSMAP
 
-#Use only intersecting genes - 11810 tot intersect. DS has 110 samples, AD_1 has 104, AD_2 has 465
-gnS=intersect(colnames(datExpr.Ref.DS),intersect(colnames(datExpr.Ref.AD_1),colnames(datExpr.Ref.AD_2)))
-datExpr.Ref.DS=datExpr.Ref.DS[,match(gnS,colnames(datExpr.Ref.DS))]
-datExpr.Ref.AD_1 =datExpr.Ref.AD_1 [,match(gnS,colnames(datExpr.Ref.AD_1))]
-datExpr.Ref.AD_2 =datExpr.Ref.AD_2 [,match(gnS,colnames(datExpr.Ref.AD_2))]
+#only interested in genes that intersect across our datasets (14425 genes):
+gnS <- Reduce(intersect, list(colnames(datExpr.Ref.MAYO), colnames(datExpr.Ref.MSSM), colnames(datExpr.Ref.ROSMAP)))
+datExpr.Ref.MAYO <- datExpr.Ref.MAYO[,match(gnS,colnames(datExpr.Ref.MAYO))]
+datExpr.Ref.MSSM <- datExpr.Ref.MSSM[,match(gnS,colnames(datExpr.Ref.MSSM))]
+datExpr.Ref.ROSMAP <- datExpr.Ref.ROSMAP[,match(gnS,colnames(datExpr.Ref.ROSMAP))]
 
-#Make multiExpr list of 3 data frames
-nSets=3;
-setLabels=c("Downs syndrome samples", "Alzheimer's samples 1", "Alzheimer's samples 2")
-#Form multi-set expression data
-multiExpr = vector(mode="list", length=nSets)
+#make a list of our 3 datasets:
+nSets <- 3
+setLabels <- c("Mayo", "Mt. Sinai", "ROSMAP")
+multiExpr <- vector(mode="list", length=length(setLabels))
 
-#Remove rownames and column names from datExpr dfs, re-assign in multiExpr
-genes = colnames(datExpr.Ref.DS);
-samples = rownames(datExpr.Ref.DS);
-rownames(datExpr.Ref.DS)=NULL;
-colnames(datExpr.Ref.DS)=NULL;
-multiExpr[[1]] = list(data = datExpr.Ref.DS);
-colnames(multiExpr[[1]]$data) = genes;
-rownames(multiExpr[[1]]$data) = samples;
+i <- 1
+for (dat in list(datExpr.Ref.MAYO, datExpr.Ref.MSSM, datExpr.Ref.ROSMAP)){
+  multiExpr[[i]] <- list(data=dat)
+  i <- i+1
+}
 
-genes = colnames(datExpr.Ref.AD_1);
-samples = rownames(datExpr.Ref.AD_1);
-rownames(datExpr.Ref.AD_1)=NULL;
-colnames(datExpr.Ref.AD_1)=NULL;
-multiExpr[[2]] = list(data = datExpr.Ref.AD_1);
-names(multiExpr[[2]]$data) = genes;
-rownames(multiExpr[[2]]$data) = samples;
-
-genes = colnames(datExpr.Ref.AD_2);
-samples = rownames(datExpr.Ref.AD_2);
-rownames(datExpr.Ref.AD_2)=NULL;
-colnames(datExpr.Ref.AD_2)=NULL;
-multiExpr[[3]] = list(data = datExpr.Ref.AD_2);
-colnames(multiExpr[[3]]$data) = genes;
-rownames(multiExpr[[3]]$data) = samples;
-
-exprSize = checkSets(multiExpr)
-exprSize #Check data is in correct format; checkSets function checks whether given sets have the correct format and retrieves dimensions.
+#check that data is in the correct format using WCGNA checkSets() function:
+exprSize <- checkSets(multiExpr)
 
 #$nGenes
-#[1] 11810
+#[1] 14426
 #$nSamples
-#[1] 110 104 465
+#[1] 262 753 632
 
 #Make multiMeta of traits for all sets - list of lists
-multiMeta=list(aging = list(data=targets.Ref.DS), AD1 = list(data=targets.Ref.AD_1), AD2 = list(data=targets.Ref.AD_2))
+multiMeta <- list(MAYO = list(data=targets.Ref.MAYO), MSSM = list(data=targets.Ref.MSSM), ROSMAP = list(data=targets.Ref.ROSMAP))
 
 #Check that all genes and samples have sufficiently low numbers of missing values
-gsg = goodSamplesGenesMS(multiExpr, verbose = 3);
-gsg$allOK
+gsg <- goodSamplesGenesMS(multiExpr, verbose = 3);
+gsg$allOK #this was FALSE
 
 #If NOT all ok -
 if (!gsg$allOK)
@@ -183,33 +163,34 @@ if (!gsg$allOK)
 }
 
 #Save everything
-nGenes=exprSize$nGenes;
-nSamples=exprSize$nSamples;
+nGenes <- exprSize$nGenes;
+nSamples <- exprSize$nSamples;
 save(multiExpr, multiMeta, nGenes, nSamples, setLabels,
-     targets.Ref.AD_1, targets.Ref.AD_2, targets.Ref.DS,
-     datExpr.Ref.AD_1, datExpr.Ref.AD_2, datExpr.Ref.DS, file = "Consensus_dataInput_112418.rda");
+     targets.Ref.MAYO, targets.Ref.MSSM, targets.Ref.ROSMAP,
+     datExpr.Ref.MAYO, datExpr.Ref.MSSM, datExpr.Ref.ROSMAP, file = "wgcna_consensus_01.10.19.rda");
+
 #=====================================================================================
 #
 #  Part 2: Choose soft thresholding power
 #
 #=====================================================================================
 # Load the data saved in the first part
-load(file = "Consensus_dataInput_112418.rda");
+load(file = "wgcna_consensus_01.10.19.rda");
 
 # Get the number of sets in the multiExpr structure.
-nSets = checkSets(multiExpr)$nSets
+nSets <- checkSets(multiExpr)$nSets
 
 # Choose a set of soft-thresholding powers
-powers = c(seq(1,10,by=1), seq(12,30, by=2));
+powers <- c(seq(1,10,by=1), seq(12,30, by=2));
 # Initialize a list to hold the results of scale-free analysis
-powerTables = vector(mode = "list", length = nSets);
+powerTables <- vector(mode = "list", length = nSets);
 # Call the network topology analysis function for each set in turn
 for (set in 1:nSets)
-  powerTables[[set]] = list(data = pickSoftThreshold(multiExpr[[set]]$data, powerVector=powers,
+  powerTables[[set]] <- list(data = pickSoftThreshold(multiExpr[[set]]$data, powerVector=powers,
                                                      verbose = 5, networkType="signed", corFnc="bicor")[[2]]);
 
 # Plot the results
-pdf("1_Power_DSAD_112418.pdf", height=10, width=18)
+pdf("1_Power__01.10.19.pdf", height=10, width=18)
 colors = c("blue", "red", "black")
 # Will plot these columns of the returned scale free analysis tables
 plotCols = c(2,5,6,7)
