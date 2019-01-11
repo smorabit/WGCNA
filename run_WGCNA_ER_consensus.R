@@ -169,11 +169,11 @@ save(multiExpr, multiMeta, nGenes, nSamples, setLabels,
      targets.Ref.MAYO, targets.Ref.MSSM, targets.Ref.ROSMAP,
      datExpr.Ref.MAYO, datExpr.Ref.MSSM, datExpr.Ref.ROSMAP, file = "wgcna_consensus_01.10.19.rda");
 
-#=====================================================================================
+#===============================================================================
 #
 #  Part 2: Choose soft thresholding power
 #
-#=====================================================================================
+#===============================================================================
 # Load the data saved in the first part
 load(file = "wgcna_consensus_01.10.19.rda");
 
@@ -188,6 +188,9 @@ powerTables <- vector(mode = "list", length = nSets);
 for (set in 1:nSets)
   powerTables[[set]] <- list(data = pickSoftThreshold(multiExpr[[set]]$data, powerVector=powers,
                                                      verbose = 5, networkType="signed", corFnc="bicor")[[2]]);
+
+#save the powerTables object:
+save(powerTables, file="powerTables.rda")
 
 # Plot the results
 pdf("1_Power__01.10.19.pdf", height=10, width=18)
@@ -241,9 +244,9 @@ dev.off()
 #
 #=====================================================================================
 #Set soft thresholding power to number based on plots
-softpower=16;
+softpower=12;
 # Auto network
-load(file = "Consensus_dataInput_112418.rda");
+load(file = "wgcna_consensus_01.10.19.rda");
 net=blockwiseConsensusModules(multiExpr, blocks = NULL,
                               maxBlockSize = 30000, ## This should be set to a smaller size if the user has limited RAM
                               randomSeed = 12345,
@@ -261,7 +264,8 @@ net=blockwiseConsensusModules(multiExpr, blocks = NULL,
                               mergeCutHeight = 0.2,
                               saveConsensusTOMs = TRUE,
                               consensusTOMFilePattern = "ConsensusTOM-block.%b.rda")
-save(list=ls(),file="consensus_112418.rda")
+
+save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
 
 consMEs = net$multiMEs;
 moduleColors = net$colors;
