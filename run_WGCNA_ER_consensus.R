@@ -267,59 +267,61 @@ net=blockwiseConsensusModules(multiExpr, blocks = NULL,
 
 save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
 
+################################################################################
+#                                 bookmark                                     #
+################################################################################
+
+
 consMEs = net$multiMEs;
 moduleColors = net$colors;
 table(moduleColors)
 
 load("ConsensusTOM-block.1.rda") # consensus TOM
 consTree= hclust(1-consTomDS,method="average");
-save(list=ls(),file="consensus_112418.rda")
-#random crap
+
 # Relate modules with traits for each dataset
-##################################AD 1################################################
-load("Consensus_dataInput_112418.rda");
+# (can't be done as a loop b/c field names are not the same)
+################################## MAYO ################################################
+load("wgcna_consensus_network_01.11.19.rda");
 
-Diagnosis=factor(as.character(targets.Ref.AD_1$Diagnosis))
-Diagnosis<-relevel(Diagnosis,'Control')
-Diagnosis=as.numeric(Diagnosis)
-Age=as.numeric(targets.Ref.AD_1$AgeAtDeath)
-RIN=as.numeric(targets.Ref.AD_1$RIN)
-PC1_Sequencing=as.numeric(targets.Ref.AD_1$Seq.PC1)
-PC2_Sequencing=as.numeric(targets.Ref.AD_1$Seq.PC2)
-Brain.Bank=as.numeric(factor(targets.Ref.AD_1$Source))
-Gender=as.numeric(factor(targets.Ref.AD_1$Gender))
+Diagnosis <- factor(as.character(targets.Ref.MAYO$Diagnosis))
+Diagnosis <- relevel(Diagnosis,'Control')
+Diagnosis <- as.numeric(Diagnosis)
+Age <- as.numeric(targets.Ref.MAYO$AgeAtDeath)
+RIN <- as.numeric(targets.Ref.MAYO$RIN)
+Gender <- as.numeric(factor(targets.Ref.MAYO$Gender))
+PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.MAYO$PCT_PF_READS_ALIGNED)
 
-geneSigsAD1=matrix(NA,nrow=7,ncol=ncol(datExpr.Ref.AD_1))
-for(i in 1:ncol(geneSigsAD1)) {
-  exprvec=as.numeric(datExpr.Ref.AD_1[,i])
+geneSigsMAYO=matrix(NA,nrow=5,ncol=ncol(datExpr.Ref.MAYO))
+for(i in 1:ncol(geneSigsMAYO)) {
+  exprvec=as.numeric(datExpr.Ref.MAYO[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
   sexr=bicor(exprvec, Gender,use="pairwise.complete.obs")
-  sourcer=bicor(exprvec, Brain.Bank,use="pairwise.complete.obs")
   conditionr=bicor(exprvec, Diagnosis,use="pairwise.complete.obs")
   rinr=bicor(RIN,exprvec,use="pairwise.complete.obs")
-  pc1r=bicor(PC1_Sequencing,exprvec,use="pairwise.complete.obs")
-  pc2r=bicor(PC2_Sequencing,exprvec,use="pairwise.complete.obs")
-  geneSigsAD1[,i]=c(ager, sexr, sourcer,conditionr,rinr,pc1r,pc2r)
+  pctr=bicor(PCT_PF_READS_ALIGNED, exprvec, use="pairwise.complete.obs")
+  geneSigsMAYO[,i]=c(ager, sexr, conditionr, rinr, pctr)
   cat('Done for gene...',i,'\n')
 }
 
-geneSigsAD1[1,] =numbers2colors(as.numeric(geneSigsAD1[1,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[2,] =numbers2colors(as.numeric(geneSigsAD1[2,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[3,] =numbers2colors(as.numeric(geneSigsAD1[3,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[4,] =numbers2colors(as.numeric(geneSigsAD1[4,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[5,] =numbers2colors(as.numeric(geneSigsAD1[5,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[6,] =numbers2colors(as.numeric(geneSigsAD1[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigsAD1[7,] =numbers2colors(as.numeric(geneSigsAD1[7,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+#set colors
+for (i in 1:nrow(geneSigsMAYO)){
+  geneSigsMAYO[i,] =numbers2colors(as.numeric(geneSigsMAYO[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+}
 
-rownames(geneSigsAD1)=c("Age","Gender","Brain.Bank","Diagnosis","RIN","PC1_Sequencing","PC2_Sequencing")
+rownames(geneSigsMAYO)=c("Age","Gender","Diagnosis","RIN","PCT_PF_READS_ALIGNED")
 
-##################################AD 2################################################
+##################################MSSM################################################
 Diagnosis=factor(as.character(targets.Ref.AD_2$Disease))
 Diagnosis<-relevel(Diagnosis,'Control')
 Diagnosis=as.numeric(Diagnosis)
 Age=as.numeric(targets.Ref.AD_2$Age)
 GEO=as.numeric(factor(targets.Ref.AD_2$geo_accession))
 Gender=as.numeric(factor(targets.Ref.AD_2$Sex))
+#PCT_PF_READS_ALIGNED
+#CDR
+#AOD == ageofdeath
+#RIN
 
 geneSigsAD2=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.AD_2))
 for(i in 1:ncol(geneSigsAD2)) {
@@ -339,7 +341,7 @@ geneSigsAD2[4,] =numbers2colors(as.numeric(geneSigsAD2[4,]),signed=TRUE,centered
 
 rownames(geneSigsAD2)=c("Age","Gender","Diagnosis", "GEO")
 
-###############################DS########################################
+###############################ROSMAP########################################
 targets.Ref.DS$Age = c("0", "0", "0", "0", "0.333", "0.333", "0.333", "0.5", "0.5", "0.5",
                        "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833",
                        "0.833", "0.833", "0.833", "1", "1", "2", "2", "3", "3", "3",
@@ -356,6 +358,10 @@ Age=as.numeric(targets.Ref.DS$Age)
 Gender=as.numeric(factor(targets.Ref.DS$Sex))
 Diagnosis = as.numeric(factor(targets.Ref.DS$disease))
 Region = as.numeric(factor(targets.Ref.DS$region))
+#PCT_PF_READS_ALIGNED
+#cogdx
+#RIN
+#age_death
 
 geneSigsDS=matrix(NA,nrow=4,ncol=ncol(datExpr.Ref.DS))
 for(i in 1:ncol(geneSigsAD2)) {
