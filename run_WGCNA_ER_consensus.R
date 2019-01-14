@@ -267,10 +267,6 @@ net=blockwiseConsensusModules(multiExpr, blocks = NULL,
 
 save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
 
-################################################################################
-#                                 bookmark                                     #
-################################################################################
-
 #load data
 load("wgcna_consensus_network_01.11.19.rda")
 
@@ -313,9 +309,7 @@ for (i in 1:nrow(geneSigsMAYO)){
 rownames(geneSigsMAYO)=c("Age","Gender","Diagnosis","RIN","PCT_PF_READS_ALIGNED")
 
 ################################## MSSM ################################################
-Diagnosis <- factor(as.character(targets.Ref.MSSM$Diagnosis))
-Diagnosis <- relevel(Diagnosis,'CONTROL')
-Diagnosis <- as.numeric(Diagnosis)
+Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MSSM$Diagnosis)), 'CONTROL'))
 Age <- as.numeric(targets.Ref.MSSM$AOD)
 RIN <- as.numeric(targets.Ref.MSSM$RIN)
 Gender <- as.numeric(factor(targets.Ref.MSSM$SEX))
@@ -337,11 +331,9 @@ for(i in 1:ncol(geneSigsMSSM)) {
 }
 
 for (i in 1:nrow(geneSigsMSSM)){
-  geneSigsMSSm[i,] <- numbers2colors(as.numeric(geneSigsMSSM[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+  geneSigsMSSM[i,] <- numbers2colors(as.numeric(geneSigsMSSM[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
 rownames(geneSigsMSSM)=c("Age","Gender","Diagnosis", "RIN", "PCT_PF_READS_ALIGNED", "CDR")
-
-save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
 
 ############################### ROSMAP ########################################
 
@@ -367,12 +359,18 @@ for(i in 1:ncol(geneSigsROSMAP)) {
 }
 
 for (i in 1:nrow(geneSigsROSMAP)){
-  geneSigsROSMAP[i,] =numbers2colors(as.numeric(geneSigsROSMAP[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+  geneSigsROSMAP[i,] <- numbers2colors(as.numeric(geneSigsROSMAP[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
 rownames(geneSigsROSMAP)=c("Age","Gender","Diagnosis", "RIN", "cogdx", "PCT_PF_READS_ALIGNED")
 
-# Calculate modules for each set of parameters
-load("consensus_112418.rda")
+save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
+
+
+################################################################################
+#                                 bookmark                                     #
+################################################################################
+
+############# Calculate modules for each set of parameters #####################
 mColorh <- mLabelh <- colorLabels <- NULL
 for (minModSize in c(40,100,160)) {
   for (dthresh in c(0.1,0.2,0.25)) {
@@ -392,13 +390,13 @@ for (minModSize in c(40,100,160)) {
 }
 
 # Plotting modules for each set of params and traits
-mColorh1=cbind(mColorh,geneSigsAD1[1,],geneSigsAD1[2,],geneSigsAD1[3,],geneSigsAD1[4,],geneSigsAD1[5,],geneSigsAD1[6,],geneSigsAD1[7,],
-               geneSigsAD2[1,], geneSigsAD2[2,], geneSigsAD2[3,], geneSigsAD2[4,],
-               geneSigsDS[1,], geneSigsDS[2,], geneSigsDS[3,], geneSigsDS[4,])
-rownames_geneSigs = c(rownames(geneSigsAD1), rownames(geneSigsAD2), rownames(geneSigsDS))
+mColorh1=cbind(mColorh,geneSigsMAYO[1,],geneSigsMAYO[2,],geneSigsMAYO[3,],geneSigsMAYO[4,],geneSigsMAYO[5,],
+               geneSigsMSSM[1,], geneSigsMSSM[2,], geneSigsMSSM[3,], geneSigsMSSM[4,], geneSigsMSSM[5,], geneSigsMSSM[6,],
+               geneSigsROSMAP[1,], geneSigsROSMAP[2,], geneSigsROSMAP[3,], geneSigsROSMAP[4,], geneSigsROSMAP[5,], geneSigsROSMAP[6,])
+rownames_geneSigs = c(rownames(geneSigsMAYO), rownames(geneSigsMSSM), rownames(geneSigsROSMAP))
 mLabelh1=c(mLabelh,rownames_geneSigs)
 
-pdf("ConsensusTOM_MultiDendro_DSAD_112418.pdf",height=25,width=20)
+pdf("ConsensusTOM_MultiDendro_DSAD_01.14.19.pdf",height=25,width=20)
 plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed consensus network with power = 16"));
 dev.off()
 
