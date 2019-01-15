@@ -1,6 +1,6 @@
 ##################Consensus Network WGCNA####################
-# Consensus performed between Downs syndrome microarray data in cortex regions (CBC, DFC, FC, IPC, ITC, MFC, OFC, S1C, STC, V1C) from GSE59630,
-# Alzheimer's RNA seq data in temporal cortex from Mayo Clinic, and Alzheimer's microarray data in frontal cortex from Zhang
+# Consensus performed between human brain RNA-seq expression data from three independent consortia,
+# Mayo clinic, Mt. Sinai, and ROSMAP.
 setwd("~/WGCNA")
 getwd()
 library(WGCNA)
@@ -15,14 +15,11 @@ enableWGCNAThreads()
 #=====================================================================================
 #
 #  Part 1: Data Input, cleaning, and pre-processing
+#  Note: The only thing that I am doing so far is loading the data and then
+#        moving on to step 2.
 #
 #=====================================================================================
-# Data from GSE59630 (downs syndrome microarray) prepared with GEO2R - everything until data cleanup generated online
 
-
-# Version info: R 3.2.3, Biobase 2.30.0, GEOquery 2.40.0, limma 3.26.8
-# R scripts generated  Tue Oct 30 13:30:48 EDT 2018
-################################################################
 #   Differential expression analysis with limma
 library(Biobase)
 library(GEOquery)
@@ -162,6 +159,11 @@ if (!gsg$allOK)
   exprSize = checkSets(multiExpr)
 }
 
+#update data based on multiExpr:
+datExpr.Ref.MAYO <- multiExpr[[1]]$data
+datExpr.Ref.MSSM <- multiExpr[[2]]$data
+datExpr.Ref.MSSM <- multiExpr[[3]]$data
+
 #Save everything
 nGenes <- exprSize$nGenes;
 nSamples <- exprSize$nSamples;
@@ -280,7 +282,6 @@ consTree= hclust(1-consTomDS,method="average");
 # Relate modules with traits for each dataset
 # (can't be done as a loop b/c field names are not the same)
 ################################## MAYO ################################################
-load("wgcna_consensus_network_01.11.19.rda");
 
 Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MAYO$Diagnosis)), 'CONTROL'))
 Age <- as.numeric(targets.Ref.MAYO$AgeAtDeath)
@@ -289,7 +290,7 @@ Gender <- as.numeric(factor(targets.Ref.MAYO$Gender))
 PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.MAYO$PCT_PF_READS_ALIGNED)
 
 #this for loop generates a bunch of warnings
-geneSigsMAYO=matrix(NA,nrow=5,ncol=ncol(datExpr.Ref.MAYO))
+geneSigsMAYO <- matrix(NA,nrow=5,ncol=ncol(datExpr.Ref.MAYO))
 for(i in 1:ncol(geneSigsMAYO)) {
   exprvec=as.numeric(datExpr.Ref.MAYO[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
@@ -303,10 +304,10 @@ for(i in 1:ncol(geneSigsMAYO)) {
 
 #set colors
 for (i in 1:nrow(geneSigsMAYO)){
-  geneSigsMAYO[i,] =numbers2colors(as.numeric(geneSigsMAYO[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+  geneSigsMAYO[i,] <- numbers2colors(as.numeric(geneSigsMAYO[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
 
-rownames(geneSigsMAYO)=c("Age","Gender","Diagnosis","RIN","PCT_PF_READS_ALIGNED")
+rownames(geneSigsMAYO) <- c("Age","Gender","Diagnosis","RIN","PCT_PF_READS_ALIGNED")
 
 ################################## MSSM ################################################
 Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MSSM$Diagnosis)), 'CONTROL'))
@@ -317,7 +318,7 @@ PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.MSSM$PCT_PF_READS_ALIGNED)
 CDR <- as.numeric(targets.Ref.MSSM$CDR)
 
 #this for loop also generates a bunch of warnings
-geneSigsMSSM=matrix(NA,nrow=6,ncol=ncol(datExpr.Ref.MSSM))
+geneSigsMSSM <- matrix(NA,nrow=6,ncol=ncol(datExpr.Ref.MSSM))
 for(i in 1:ncol(geneSigsMSSM)) {
   exprvec=as.numeric(datExpr.Ref.MSSM[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
@@ -333,7 +334,7 @@ for(i in 1:ncol(geneSigsMSSM)) {
 for (i in 1:nrow(geneSigsMSSM)){
   geneSigsMSSM[i,] <- numbers2colors(as.numeric(geneSigsMSSM[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
-rownames(geneSigsMSSM)=c("Age","Gender","Diagnosis", "RIN", "PCT_PF_READS_ALIGNED", "CDR")
+rownames(geneSigsMSSM) <- c("Age","Gender","Diagnosis", "RIN", "PCT_PF_READS_ALIGNED", "CDR")
 
 ############################### ROSMAP ########################################
 
@@ -344,7 +345,7 @@ RIN <- as.numeric(targets.Ref.ROSMAP$RINcontinuous)
 cogdx <- as.numeric(targets.Ref.ROSMAP$cogdx)
 PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.ROSMAP$PCT_PF_READS_ALIGNED)
 
-geneSigsROSMAP=matrix(NA,nrow=6,ncol=ncol(datExpr.Ref.ROSMAP))
+geneSigsROSMAP <- matrix(NA,nrow=6,ncol=ncol(datExpr.Ref.ROSMAP))
 for(i in 1:ncol(geneSigsROSMAP)) {
   exprvec=as.numeric(datExpr.Ref.ROSMAP[,i])
   ager=bicor(Age,exprvec,use="pairwise.complete.obs")
@@ -353,7 +354,6 @@ for(i in 1:ncol(geneSigsROSMAP)) {
   rinr=bicor(exprvec, RIN, use="pairwise.complete.obs")
   cogdxr=bicor(exprvec, cogdx, use="pairwise.complete.obs")
   pctr=bicor(exprvec, PCT_PF_READS_ALIGNED, use="pairwise.complete.obs")
-
   geneSigsROSMAP[,i]=c(ager, sexr, conditionr, rinr, cogdxr, pctr)
   cat('Done for gene...',i,'\n')
 }
@@ -369,6 +369,8 @@ save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
 ################################################################################
 #                                 bookmark                                     #
 ################################################################################
+
+load("wgcna_consensus_network_01.11.19.rda");
 
 ############# Calculate modules for each set of parameters #####################
 mColorh <- mLabelh <- colorLabels <- NULL
@@ -397,7 +399,7 @@ rownames_geneSigs = c(rownames(geneSigsMAYO), rownames(geneSigsMSSM), rownames(g
 mLabelh1=c(mLabelh,rownames_geneSigs)
 
 pdf("ConsensusTOM_MultiDendro_DSAD_01.14.19.pdf",height=25,width=20)
-plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed consensus network with power = 16"));
+plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed consensus network with power = 12"));
 dev.off()
 
 ##############Choose parameters for final dendrogram#########################
