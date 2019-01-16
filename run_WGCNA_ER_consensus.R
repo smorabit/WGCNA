@@ -526,7 +526,7 @@ textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(mod
 #make a change
 
 #Plot heatmap
-pdf(paste('NetworkPlot_MAYO_consensus_01.15.19.pdf'),width=16,height=30)
+pdf(paste('NetworkPlot_MAYO_consensus_01.16.19.pdf'),width=16,height=30)
 par( mar = c(8, 12, 3, 3) );
 labeledHeatmap(Matrix = moduleTraitCor_MAYO,
                 xLabels = colnames(factors1_MAYO),
@@ -548,65 +548,58 @@ plotEigengeneNetworks(MEs_MAYO, "Eigengene Network", marHeatmap = c(3,4,2,2),
                       marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
-################################################################################
-#                                 bookmark                                     #
-# Getting an error for the below block of code for generating boxplots. Will   #
-# attempt to resolve the errors tomorrow.                                      #
-################################################################################
-
 #Plot boxplots, scatterplots
 toplot=t(MEs_MAYO)
 cols=substring(colnames(MEs_MAYO),3,20)
 par(mfrow=c(4,4))
 par(mar=c(5,6,4,2))
 for (i in 1:nrow(toplot)) {
-  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.MAYO$Diagnosis)),c('Control','MAYO')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.MAYO$Diagnosis)),c('CONTROL','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
   verboseScatterplot(x=as.numeric(targets.Ref.MAYO$AgeAtDeath),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
   boxplot(toplot[i,]~factor(targets.Ref.MAYO$Gender),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
 }
 
 dev.off()
 
-##################################AD 2################################################
-nSamples = nrow(datExpr.Ref.AD_2);
-nGenes = ncol(datExpr.Ref.AD_2);
+################################## MSSM ################################################
+nSamples = nrow(datExpr.Ref.MSSM);
+nGenes = ncol(datExpr.Ref.MSSM);
 
-Diagnosis=factor(as.character(targets.Ref.AD_2$Disease))
-Diagnosis<-relevel(Diagnosis,'Control')
-Diagnosis=as.numeric(Diagnosis)
-Age=as.numeric(targets.Ref.AD_2$Age)
-GEO=as.numeric(factor(targets.Ref.AD_2$geo_accession))
-Gender=as.numeric(factor(targets.Ref.AD_2$Sex))
+Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MSSM$Diagnosis)), 'CONTROL'))
+Age <- as.numeric(targets.Ref.MSSM$AOD)
+RIN <- as.numeric(targets.Ref.MSSM$RIN)
+Gender <- as.numeric(factor(targets.Ref.MSSM$SEX))
+PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.MSSM$PCT_PF_READS_ALIGNED)
+CDR <- as.numeric(targets.Ref.MSSM$CDR)
 
-factors1_AD2=cbind(Diagnosis, Age, Gender, GEO)
+factors1_MSSM=cbind(Diagnosis, Age, Gender, RIN, PCT_PF_READS_ALIGNED, CDR)
+PCvalues<-MEs_MSSM[,-ncol(MEs_MSSM)] #exclude grey
 
-PCvalues<-MEs_AD2[,-ncol(MEs_AD2)] #exclude grey
-dim(PCvalues)
 
-moduleTraitCor_AD2 = cor(PCvalues, factors1_AD2, use = "p");
-moduleTraitPvalue_AD2 = corPvalueStudent(moduleTraitCor_AD2, nSamples);
-colnames(moduleTraitPvalue_AD2) = paste("p.value.", colnames(moduleTraitCor_AD2), sep="");
+moduleTraitCor_MSSM= cor(PCvalues, factors1_MSSM, use = "p");
+moduleTraitPvalue_MSSM = corPvalueStudent(moduleTraitCor_MSSM, nSamples);
+colnames(moduleTraitPvalue_MSSM) = paste("p.value.", colnames(moduleTraitCor_MSSM), sep="");
 
 ## Use the text function with the FDR filter in labeledHeatmap to add asterisks, e.g.
-txtMat <-  signif(moduleTraitPvalue_AD2,2)
+txtMat <-  signif(moduleTraitPvalue_MSSM,2)
 txtMat[txtMat>=0.05] <- ""
 txtMat[txtMat <0.05&txtMat >0.01] <- "*"
 txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 #txtMat[txtMat <0.005&txtMat >0] <- "***"
+txtMat1 <- signif( moduleTraitCor_MSSM,2)
 
-txtMat1 <- signif( moduleTraitCor_AD2,2)
 #we only want to look at pearson correlations in certain range
 txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
-textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_AD2),nrow=nrow(moduleTraitPvalue_AD2))
+textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MSSM),nrow=nrow(moduleTraitPvalue_MSSM))
 
 #Plot heatmap
-pdf(paste('NetworkPlot_AD2_consensus_112418.pdf'),width=16,height=30)
+pdf(paste('NetworkPlot_MSSM_consensus_01.16.19.pdf'),width=16,height=30)
 par( mar = c(8, 12, 3, 3) );
-labeledHeatmap( Matrix = moduleTraitCor_AD2,
-                xLabels = colnames(factors1_AD2),
-                yLabels = rownames(moduleTraitPvalue_AD2),
-                ySymbols = rownames(moduleTraitPvalue_AD2),
+labeledHeatmap( Matrix = moduleTraitCor_MSSM,
+                xLabels = colnames(factors1_MSSM),
+                yLabels = rownames(moduleTraitPvalue_MSSM),
+                ySymbols = rownames(moduleTraitPvalue_MSSM),
                 colorLabels = FALSE,
                 colors = blueWhiteRed(50),
                 textMatrix = textMatrix1,
@@ -619,73 +612,62 @@ labeledHeatmap( Matrix = moduleTraitCor_AD2,
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs_AD2, "Eigengene Network", marHeatmap = c(3,4,2,2),
+plotEigengeneNetworks(MEs_MSSM, "Eigengene Network", marHeatmap = c(3,4,2,2),
                       marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
 #Plot boxplots, scatterplots
-toplot=t(MEs_AD2)
-cols=substring(colnames(MEs_AD2),3,20)
+toplot=t(MEs_MSSM)
+cols=substring(colnames(MEs_MSSM),3,20)
 par(mfrow=c(4,4))
 par(mar=c(5,6,4,2))
 for (i in 1:nrow(toplot)) {
-  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.AD_2$Disease)),c('Control','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
-  verboseScatterplot(x=as.numeric(targets.Ref.AD_2$Age),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
-  boxplot(toplot[i,]~factor(targets.Ref.AD_2$Sex),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.MSSM$Diagnosis)),c('CONTROL','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  verboseScatterplot(x=as.numeric(targets.Ref.MSSM$AOD),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
+  boxplot(toplot[i,]~factor(targets.Ref.MSSM$SEX),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
 }
 
 dev.off()
 
-###############################DS########################################
-nSamples = nrow(datExpr.Ref.DS);
-nGenes = ncol(datExpr.Ref.DS);
+############################### ROSMAP ########################################
+nSamples = nrow(datExpr.Ref.ROSMAP);
+nGenes = ncol(datExpr.Ref.ROSMAP);
 
-targets.Ref.DS$Age = c("0", "0", "0", "0", "0.333", "0.333", "0.333", "0.5", "0.5", "0.5",
-                       "0.5", "0.5", "0.5", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833", "0.833",
-                       "0.833", "0.833", "0.833", "1", "1", "2", "2", "3", "3", "3",
-                       "3", "3", "8", "8", "8", "15", "15", "15", "15", "18",
-                       "18", "18", "22", "22", "22", "30", "30", "30", "30", "30",
-                       "30", "42", "42", "42", "42", "0", "0", "0", "0", "0.083",
-                       "0.083", "0.083", "0.5", "0.5", "0.5", "0.5", "0.5", "0.5", "0.75", "0.75",
-                       "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "0.75", "1.17", "1.17",
-                       "3", "3", "3", "3", "3", "2", "2", "10", "10", "10",
-                       "13", "13", "13", "13", "19", "19", "19", "22", "22", "22",
-                       "39", "39", "39", "39", "39", "39", "40", "40", "40", "40")
+Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.ROSMAP$Diagnosis)), 'CONTROL'))
+Age <- as.numeric(targets.Ref.ROSMAP$age_death)
+Gender <- as.numeric(factor(targets.Ref.ROSMAP$msex))
+RIN <- as.numeric(targets.Ref.ROSMAP$RINcontinuous)
+cogdx <- as.numeric(targets.Ref.ROSMAP$cogdx)
+PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.ROSMAP$PCT_PF_READS_ALIGNED)
 
-Age=as.numeric(targets.Ref.DS$Age)
-Gender=as.numeric(factor(targets.Ref.DS$Sex))
-Diagnosis = as.numeric(factor(targets.Ref.DS$disease))
-Region = as.numeric(factor(targets.Ref.DS$region))
+factors1_ROSMAP <- cbind(Diagnosis, Age, Gender, RIN, PCT_PF_READS_ALIGNED, cogdx)
+PCvalues <- MEs_ROSMAP[,-ncol(MEs_ROSMAP)] #exclude grey
 
-factors1_DS=cbind(Diagnosis, Age, Gender, Region)
-
-PCvalues<-MEs_DS[,-ncol(MEs_DS)] #exclude grey
-dim(PCvalues) #number of modules
-
-moduleTraitCor_DS= cor(PCvalues, factors1_DS, use = "p");
-moduleTraitPvalue_DS = corPvalueStudent(moduleTraitCor_DS, nSamples);
-colnames(moduleTraitPvalue_DS) = paste("p.value.", colnames(moduleTraitCor_DS), sep="");
+moduleTraitCor_ROSMAP <- cor(PCvalues, factors1_ROSMAP, use = "p");
+moduleTraitPvalue_ROSMAP <- corPvalueStudent(moduleTraitCor_ROSMAP, nSamples);
+colnames(moduleTraitPvalue_ROSMAP) = paste("p.value.", colnames(moduleTraitCor_ROSMAP), sep="");
 
 ## Use the text function with the FDR filter in labeledHeatmap to add asterisks, e.g.
-txtMat <-  signif(moduleTraitPvalue_DS,2)
+txtMat <-  signif(moduleTraitPvalue_ROSMAP,2)
 txtMat[txtMat>=0.05] <- ""
 txtMat[txtMat <0.05&txtMat >0.01] <- "*"
 txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 #txtMat[txtMat <0.005&txtMat >0] <- "***"
+txtMat1 <- signif( moduleTraitCor_ROSMAP,2)
 
-txtMat1 <- signif( moduleTraitCor_DS,2)
 #we only want to look at pearson correlations in certain range
 txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
-textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_DS),nrow=nrow(moduleTraitPvalue_DS))
+textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_ROSMAP),nrow=nrow(moduleTraitPvalue_ROSMAP))
 
-pdf(paste('NetworkPlot_DS_consensus_112418.pdf'),width=16,height=30)
+#plotting
+pdf(paste('NetworkPlot_ROSMAP_consensus_01.16.19.pdf'),width=16,height=30)
 par( mar = c(8, 12, 3, 3) );
-labeledHeatmap( Matrix = moduleTraitCor_DS,
-                xLabels = colnames(factors1_DS),
-                yLabels = rownames(moduleTraitPvalue_DS),
-                ySymbols = rownames(moduleTraitPvalue_DS),
+labeledHeatmap( Matrix = moduleTraitCor_ROSMAP,
+                xLabels = colnames(factors1_ROSMAP),
+                yLabels = rownames(moduleTraitPvalue_ROSMAP),
+                ySymbols = rownames(moduleTraitPvalue_ROSMAP),
                 colorLabels = FALSE,
                 colors = blueWhiteRed(50),
                 textMatrix = textMatrix1,
@@ -698,26 +680,30 @@ labeledHeatmap( Matrix = moduleTraitCor_DS,
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs_DS, "Eigengene Network", marHeatmap = c(3,4,2,2), marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE, xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
+plotEigengeneNetworks(MEs_ROSMAP, "Eigengene Network", marHeatmap = c(3,4,2,2), marDendro = c(0,4,1,2),
+                      cex.adjacency = 0.3,plotDendrograms = TRUE, xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
 #Plot boxplots, scatterplots
-toplot=t(MEs_DS)
-cols=substring(colnames(MEs_DS),3,20)
+toplot=t(MEs_ROSMAP)
+cols=substring(colnames(MEs_ROSMAP),3,20)
 par(mfrow=c(4,4))
 par(mar=c(5,6,4,2))
 for (i in 1:nrow(toplot)) {
-  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.DS$disease)),c('CTL','DS')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
-  verboseScatterplot(x=as.numeric(targets.Ref.DS$Age),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
-  boxplot(toplot[i,]~factor(targets.Ref.DS$Sex),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.ROSMAP$Diagnosis)),c('CONTROL','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  verboseScatterplot(x=as.numeric(targets.Ref.ROSMAP$age_death),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
+  boxplot(toplot[i,]~factor(targets.Ref.ROSMAP$msex),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
 }
 
 dev.off()
 
+moduleTraitPval=cbind(moduleTraitPvalue_MAYO, moduleTraitPvalue_MSSM, moduleTraitPvalue_ROSMAP)
+moduleTraitCor=cbind(moduleTraitCor_MAYO, moduleTraitCor_MSSM, moduleTraitCor_ROSMAP)
+write.csv(moduleTraitPval,'moduleTraitPvalue_MAYO_MSSM_ROSMAP_01.16.19.csv')
+write.csv(moduleTraitCor,'moduleTraitCor_MAYO_MSSM_ROSMAP_01.16.19.csv')
 
-moduleTraitPval=cbind(moduleTraitPvalue_DS, moduleTraitPvalue_AD1, moduleTraitPvalue_AD2)
-moduleTraitCor=cbind(moduleTraitCor_DS, moduleTraitCor_AD1, moduleTraitCor_AD2)
-write.csv(moduleTraitPval,'moduleTraitPvalue_DSAD_112418.csv')
-write.csv(moduleTraitCor,'moduleTraitCor_DSAD_112418.csv')
+################################################################################
+#                                 bookmark                                     #
+################################################################################
 
 #=====================================================================================
 #
