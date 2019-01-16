@@ -519,9 +519,11 @@ txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 
 txtMat1 <- signif( moduleTraitCor_MAYO,2)
 #we only want to look at pearson correlations in certain range
-txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
+txtMat1[txtMat1 > -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(moduleTraitPvalue_MAYO))
+
+#make a change
 
 #Plot heatmap
 pdf(paste('NetworkPlot_MAYO_consensus_01.15.19.pdf'),width=16,height=30)
