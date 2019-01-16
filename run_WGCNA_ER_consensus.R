@@ -307,7 +307,7 @@ for (i in 1:nrow(geneSigsMAYO)){
   geneSigsMAYO[i,] <- numbers2colors(as.numeric(geneSigsMAYO[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
 
-rownames(geneSigsMAYO) <- c("Age","Gender","Diagnosis","RIN","PCT_PF_READS_ALIGNED")
+rownames(geneSigsMAYO) <- c("Mayo Age","Mayo Gender","Mayo Diagnosis","Mayo RIN","Mayo Reads Aligned")
 
 ################################## MSSM ################################################
 Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MSSM$Diagnosis)), 'CONTROL'))
@@ -334,7 +334,7 @@ for(i in 1:ncol(geneSigsMSSM)) {
 for (i in 1:nrow(geneSigsMSSM)){
   geneSigsMSSM[i,] <- numbers2colors(as.numeric(geneSigsMSSM[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
-rownames(geneSigsMSSM) <- c("Age","Gender","Diagnosis", "RIN", "PCT_PF_READS_ALIGNED", "CDR")
+rownames(geneSigsMSSM) <- c("MSSM Age","MSSM Gender","MSSM Diagnosis", "MSSM RIN", "MSSM Reads Aligned", "MSSM CDR")
 
 ############################### ROSMAP ########################################
 
@@ -361,16 +361,9 @@ for(i in 1:ncol(geneSigsROSMAP)) {
 for (i in 1:nrow(geneSigsROSMAP)){
   geneSigsROSMAP[i,] <- numbers2colors(as.numeric(geneSigsROSMAP[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
-rownames(geneSigsROSMAP)=c("Age","Gender","Diagnosis", "RIN", "cogdx", "PCT_PF_READS_ALIGNED")
+rownames(geneSigsROSMAP)=c("ROSMAP Age","ROSMAP Gender","ROSMAP Diagnosis", "ROSMAP RIN", "ROSMAP cogdx", "ROSMAP Reads Aligned")
 
 save(list=ls(),file="wgcna_consensus_network_01.11.19.rda")
-
-
-################################################################################
-#                                 bookmark                                     #
-################################################################################
-
-load("wgcna_consensus_network_01.11.19.rda");
 
 ############# Calculate modules for each set of parameters #####################
 mColorh <- mLabelh <- colorLabels <- NULL
@@ -403,13 +396,14 @@ plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,den
 dev.off()
 
 ##############Choose parameters for final dendrogram#########################
-load('/home/erebboah/WGCNA/ConsensusTOM-block.1.rda') #results of network analysis
+load("wgcna_consensus_network_01.11.19.rda");
 
-mms=160
-ds=4
-dthresh=0.1
+#select dendrogram parameters
+mms <- 100
+ds <- 4
+dthresh <- 0.2
 
-tree = cutreeHybrid(dendro = consTree, pamStage=FALSE,
+tree <- cutreeHybrid(dendro = consTree, pamStage=FALSE,
                     minClusterSize = mms, cutHeight = 0.99999999,
                     deepSplit = ds, distM = as.matrix(1-consTomDS))
 
@@ -417,9 +411,9 @@ merged <- mergeCloseModules(exprData = multiExpr,colors = tree$labels,
                             cutHeight = dthresh)
 
 # Eigengenes of the new merged modules:
-MEs_DS = merged$newMEs[[1]]$data;
-MEs_AD1 = merged$newMEs[[2]]$data;
-MEs_AD2 = merged$newMEs[[3]]$data;
+MEs_MAYO <- merged$newMEs[[1]]$data;
+MEs_MSSM <- merged$newMEs[[2]]$data;
+MEs_ROSMAP <- merged$newMEs[[3]]$data;
 
 # Module color associated with each gene
 moduleColor.cons <- labels2colors(merged$colors)
@@ -427,32 +421,32 @@ moduleColor.cons <- labels2colors(merged$colors)
 mColorh <- cbind(labels2colors(merged$colors))
 mLabelh <- c("Merged Colors")
 
-mColorh1=cbind(mColorh,geneSigsAD1[1,],geneSigsAD1[2,],geneSigsAD1[3,],geneSigsAD1[4,],geneSigsAD1[5,],geneSigsAD1[6,],geneSigsAD1[7,],
-               geneSigsAD2[1,], geneSigsAD2[2,], geneSigsAD2[3,], geneSigsAD2[4,],
-               geneSigsDS[1,], geneSigsDS[2,], geneSigsDS[3,], geneSigsDS[4,])
-rownames_geneSigs = c(rownames(geneSigsAD1), rownames(geneSigsAD2), rownames(geneSigsDS))
-mLabelh1=c(mLabelh,rownames_geneSigs)
+mColorh1 <- cbind(mColorh,geneSigsMAYO[1,],geneSigsMAYO[2,],geneSigsMAYO[3,],geneSigsMAYO[4,],geneSigsMAYO[5,],
+               geneSigsMSSM[1,], geneSigsMSSM[2,], geneSigsMSSM[3,], geneSigsMSSM[4,], geneSigsMSSM[5,], geneSigsMSSM[6,],
+               geneSigsROSMAP[1,], geneSigsROSMAP[2,], geneSigsROSMAP[3,], geneSigsROSMAP[4,], geneSigsROSMAP[5,], geneSigsROSMAP[6,])
+rownames_geneSigs <- c(rownames(geneSigsMAYO), rownames(geneSigsMSSM), rownames(geneSigsROSMAP))
+mLabelh1 <- c(mLabelh,rownames_geneSigs)
 
-pdf("ConsensusTOM_FinalDendro_DSAD_112718.pdf",height=10,width=16)
-plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network with power = 16, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
+pdf("ConsensusTOM_FinalDendro_MAYO_MSSM_ROSMAP_01.15.19.pdf",height=10,width=16)
+plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network with power = 12, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
 dev.off()
 
 #Just look at diagnosis traits
-mColorh1=cbind(mColorh,geneSigsAD1[4,], geneSigsAD2[3,], geneSigsDS[3,])
-rownames_geneSigs = c("AD1 Diagnosis", "AD2 Diagnosis", "DS Diagnosis")
-mLabelh1=c(mLabelh,rownames_geneSigs)
+mColorh1 <- cbind(mColorh,geneSigsMAYO[3,], geneSigsMSSM[3,], geneSigsROSMAP[3,])
+rownames_geneSigs <- c("Mayo Diagnosis", "MSSM Diagnosis", "ROSMAP Diagnosis")
+mLabelh1 <- c(mLabelh,rownames_geneSigs)
 
-pdf("ConsensusTOM_FinalDendro_DSAD_diag_112718.pdf",height=10,width=16)
-plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network with power = 16, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
+pdf("ConsensusTOM_FinalDendro_MAYO_MSSM_ROSMAP_diagnosis_01.15.19.pdf",height=10,width=16)
+plotDendroAndColors(consTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network with power = 12, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
 dev.off()
 
 # Convert numerical lables to colors for labeling of modules
-MEColors=labels2colors(as.numeric(substring(names(MEs_DS), 3)));
-MEColorNames = paste("ME", MEColors, sep="");
+MEColors <- labels2colors(as.numeric(substring(names(MEs_MAYO), 3)));
+MEColorNames <- paste("ME", MEColors, sep="");
 
-colnames(MEs_DS)=c(MEColorNames)
-colnames(MEs_AD1)=c(MEColorNames)
-colnames(MEs_AD2)=c(MEColorNames)
+colnames(MEs_MAYO)=c(MEColorNames)
+colnames(MEs_MSSM)=c(MEColorNames)
+colnames(MEs_ROSMAP)=c(MEColorNames)
 
 #Calculate kMEs and p value, Z score of kMEs for each gene (connectivity of each gene to a module eigengene) across datasets
 consKME1=consensusKME(multiExpr=multiExpr, moduleColor.cons,
@@ -463,11 +457,12 @@ consKME1=consensusKME(multiExpr=multiExpr, moduleColor.cons,
 consensus.KMEs=consKME1[,regexpr('consensus.kME',names(consKME1))>0]
 
 save(consensus.KMEs, consKME1, multiExpr, MEColorNames, moduleColor.cons, consTree,
-     MEs_DS, MEs_AD1, MEs_AD2, file="Consensus_MEs_112418.rda")
+     MEs_MAYO, MEs_MSSM, MEs_ROSMAP, file="Consensus_MEs_01.15.19.rda")
 
 #=====================================================================================
 #
 #  Part 4: Get annotated gene lists and their associated kMEs
+#  Note: I did not run this part.
 #
 #=====================================================================================
 load("Consensus_MEs_112418.rda")
@@ -495,51 +490,46 @@ save(list=ls(),file='geneInfo.cons.112418.rda')
 #  Part 5: Module-trait relationships
 #
 #=====================================================================================
+
 load("geneInfo.cons.112418.rda")
 
-##################################AD 1################################################
-nSamples = nrow(datExpr.Ref.AD_1);
-nGenes = ncol(datExpr.Ref.AD_1);
+################################## Mayo ################################################
+nSamples = nrow(datExpr.Ref.MAYO);
+nGenes = ncol(datExpr.Ref.MAYO);
 
-Diagnosis=factor(as.character(targets.Ref.AD_1$Diagnosis))
-Diagnosis<-relevel(Diagnosis,'Control')
-Diagnosis=as.numeric(Diagnosis)
-Age=as.numeric(targets.Ref.AD_1$AgeAtDeath)
-RIN=as.numeric(targets.Ref.AD_1$RIN)
-PC1_Sequencing=as.numeric(targets.Ref.AD_1$Seq.PC1)
-PC2_Sequencing=as.numeric(targets.Ref.AD_1$Seq.PC2)
-Brain.Bank=as.numeric(factor(targets.Ref.AD_1$Source))
-Gender=as.numeric(factor(targets.Ref.AD_1$Gender))
+Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MAYO$Diagnosis)), 'CONTROL'))
+Age <- as.numeric(targets.Ref.MAYO$AgeAtDeath)
+RIN <- as.numeric(targets.Ref.MAYO$RIN)
+Gender <- as.numeric(factor(targets.Ref.MAYO$Gender))
+PCT_PF_READS_ALIGNED <- as.numeric(targets.Ref.MAYO$PCT_PF_READS_ALIGNED)
 
-factors1_AD1=cbind(Diagnosis, Age, Gender, Brain.Bank, RIN, PC1_Sequencing, PC2_Sequencing)
+factors1_MAYO <- cbind(Diagnosis, Age, Gender, RIN, PCT_PF_READS_ALIGNED)
+PCvalues <- MEs_MAYO[,-ncol(MEs_MAYO)] #exclude grey
 
-PCvalues<-MEs_AD1[,-ncol(MEs_AD1)] #exclude grey
-dim(PCvalues)
-
-moduleTraitCor_AD1 = cor(PCvalues, factors1_AD1, use = "p");
-moduleTraitPvalue_AD1 = corPvalueStudent(moduleTraitCor_AD1, nSamples);
-colnames(moduleTraitPvalue_AD1) = paste("p.value.", colnames(moduleTraitCor_AD1), sep="");
+moduleTraitCor_MAYO = cor(PCvalues, factors1_MAYO, use = "p");
+moduleTraitPvalue_MAYO = corPvalueStudent(moduleTraitCor_MAYO, nSamples);
+colnames(moduleTraitPvalue_MAYO) = paste("p.value.", colnames(moduleTraitCor_MAYO), sep="");
 
 ## Use the text function with the FDR filter in labeledHeatmap to add asterisks, e.g.
-txtMat <-  signif(moduleTraitPvalue_AD1,2)
+txtMat <-  signif(moduleTraitPvalue_MAYO, 2)
 txtMat[txtMat>=0.05] <- ""
 txtMat[txtMat <0.05&txtMat >0.01] <- "*"
 txtMat[txtMat <0.01&txtMat >0.005] <- "**"
 #txtMat[txtMat <0.005&txtMat >0] <- "***"
 
-txtMat1 <- signif( moduleTraitCor_AD1,2)
+txtMat1 <- signif( moduleTraitCor_MAYO,2)
 #we only want to look at pearson correlations in certain range
 txtMat1[txtMat1> -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
-textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_AD1),nrow=nrow(moduleTraitPvalue_AD1))
+textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(moduleTraitPvalue_MAYO))
 
 #Plot heatmap
-pdf(paste('NetworkPlot_AD1_consensus_112418.pdf'),width=16,height=30)
+pdf(paste('NetworkPlot_MAYO_consensus_01.15.19.pdf'),width=16,height=30)
 par( mar = c(8, 12, 3, 3) );
-labeledHeatmap( Matrix = moduleTraitCor_AD1,
-                xLabels = colnames(factors1_AD1),
-                yLabels = rownames(moduleTraitPvalue_AD1),
-                ySymbols = rownames(moduleTraitPvalue_AD1),
+labeledHeatmap(Matrix = moduleTraitCor_MAYO,
+                xLabels = colnames(factors1_MAYO),
+                yLabels = rownames(moduleTraitPvalue_MAYO),
+                ySymbols = rownames(moduleTraitPvalue_MAYO),
                 colorLabels = FALSE,
                 colors = blueWhiteRed(50),
                 textMatrix = textMatrix1,
@@ -548,23 +538,29 @@ labeledHeatmap( Matrix = moduleTraitCor_AD1,
                 zlim = c(-1, 1),
                 cex.lab.x = 1.2,
                 main = paste("Module-trait relationships")
-);
+)
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs_AD1, "Eigengene Network", marHeatmap = c(3,4,2,2),
+plotEigengeneNetworks(MEs_MAYO, "Eigengene Network", marHeatmap = c(3,4,2,2),
                       marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
+################################################################################
+#                                 bookmark                                     #
+# Getting an error for the below block of code for generating boxplots. Will   #
+# attempt to resolve the errors tomorrow.                                      #
+################################################################################
+
 #Plot boxplots, scatterplots
-toplot=t(MEs_AD1)
-cols=substring(colnames(MEs_AD1),3,20)
+toplot=t(MEs_MAYO)
+cols=substring(colnames(MEs_MAYO),3,20)
 par(mfrow=c(4,4))
 par(mar=c(5,6,4,2))
 for (i in 1:nrow(toplot)) {
-  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.AD_1$Diagnosis)),c('Control','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
-  verboseScatterplot(x=as.numeric(targets.Ref.AD_1$Age),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
-  boxplot(toplot[i,]~factor(targets.Ref.AD_1$Gender),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref.MAYO$Diagnosis)),c('Control','MAYO')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  verboseScatterplot(x=as.numeric(targets.Ref.MAYO$AgeAtDeath),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
+  boxplot(toplot[i,]~factor(targets.Ref.MAYO$Gender),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
 }
 
 dev.off()
