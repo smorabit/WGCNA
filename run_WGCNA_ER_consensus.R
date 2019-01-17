@@ -462,28 +462,27 @@ save(consensus.KMEs, consKME1, multiExpr, MEColorNames, moduleColor.cons, consTr
 #=====================================================================================
 #
 #  Part 4: Get annotated gene lists and their associated kMEs
-#  Note: I did not run this part.
 #
 #=====================================================================================
-load("Consensus_MEs_112418.rda")
-ensembl=read.csv("/home/vivek/FTD_Seeley/Analysis_Nov2017/ENSG85_Human.csv.gz") # Convert Ensembl gene ID to gene names
-consensus.KMEs$Ensembl.Gene.ID=paste(rownames(consensus.KMEs))
+load("Consensus_MEs_01.15.19.rda")
+ensembl <- read.csv("/home/vivek/FTD_Seeley/Analysis_Nov2017/ENSG85_Human.csv.gz") # Convert Ensembl gene ID to gene names
+consensus.KMEs$Ensembl.Gene.ID <- paste(rownames(consensus.KMEs))
 
-merged=merge(consensus.KMEs,ensembl,by.x="Ensembl.Gene.ID",by.y="Ensembl.Gene.ID",all.x=T)
-ind=match(consensus.KMEs$Ensembl.Gene.ID,merged$Ensembl.Gene.ID)
-merged1=merged[ind,]
-consensus.KMEs.annot=merged1
+merged <- merge(consensus.KMEs,ensembl,by.x="Ensembl.Gene.ID",by.y="Ensembl.Gene.ID",all.x=T)
+ind <- match(consensus.KMEs$Ensembl.Gene.ID,merged$Ensembl.Gene.ID)
+merged1 <- merged[ind,]
+consensus.KMEs.annot <- merged1
 
-geneInfo.cons=as.data.frame(cbind(consensus.KMEs.annot$Ensembl.Gene.ID,consensus.KMEs.annot$Associated.Gene.Name,
+geneInfo.cons <- as.data.frame(cbind(consensus.KMEs.annot$Ensembl.Gene.ID,consensus.KMEs.annot$Associated.Gene.Name,
                                   moduleColor.cons,consensus.KMEs))
-geneInfo.cons=geneInfo.cons[,-ncol(geneInfo.cons)] # check if last column is Ensembl gene id
+geneInfo.cons <- geneInfo.cons[,-ncol(geneInfo.cons)] # check if last column is Ensembl gene id
 
 colnames(geneInfo.cons)[1]= "Ensembl.Gene.ID"
 colnames(geneInfo.cons)[2]= "GeneSymbol"
 colnames(geneInfo.cons)[3]= "Initially.Assigned.Module.Color"
 
-write.csv(geneInfo.cons,'geneInfo.cons.DSAD_112418.csv') #Final annotated geneInfo file is input to the rest of the analysis
-save(list=ls(),file='geneInfo.cons.112418.rda')
+write.csv(geneInfo.cons,'geneInfo.cons.MAYO_MSSM_ROSMAP_01.17.19.csv') #Final annotated geneInfo file is input to the rest of the analysis
+save(list=ls(),file='geneInfo.cons.01.17.19.rda')
 
 #=====================================================================================
 #
@@ -701,16 +700,14 @@ moduleTraitCor=cbind(moduleTraitCor_MAYO, moduleTraitCor_MSSM, moduleTraitCor_RO
 write.csv(moduleTraitPval,'moduleTraitPvalue_MAYO_MSSM_ROSMAP_01.16.19.csv')
 write.csv(moduleTraitCor,'moduleTraitCor_MAYO_MSSM_ROSMAP_01.16.19.csv')
 
-################################################################################
-#                                 bookmark                                     #
-################################################################################
-
 #=====================================================================================
 #
 #  Part 6: GO analysis
 #
 #=====================================================================================
 # Makes bar plots of top enriched GO terms for each module
+
+load(file='geneInfo.cons.01.17.19.rda')
 
 dir.create("./geneInfo")
 dir.create("./geneInfo/background/")
@@ -740,14 +737,19 @@ for(i in 1:length(uniquemodcolors)){
 
 # Run GO elite as nohupped shell script:
 codedir <- "/home/vivek/bin/GO-Elite_v.1.2.5-Py"
-pathname <- "/home/erebboah/WGCNA/geneInfo"
+pathname <- "~/WGCNA/geneInfo"
 nperm=10000
 system(paste("nohup python ",codedir,"/GO_Elite.py --species Hs --mod Ensembl --permutations ",
              nperm,"  --method \"z-score\" --zscore 1.96 --pval 0.01 --num 5 --input ",pathname,
              "/input --denom ",pathname,"/background --output ",pathname,"/output &",sep=""))
 
+################################################################################
+#                                 bookmark                                     #
+################################################################################
+
+
 # Plotting the GO Output
-pathname <- "/home/erebboah/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
+pathname <- "~/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
 
 uniquemodcolors=uniquemodcolors[-c(2, 14)] # For some reason sometimes modules are not run correctly, therefore won't be able to be plotted so they are excluded
 
