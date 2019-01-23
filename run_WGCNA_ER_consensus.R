@@ -743,19 +743,25 @@ system(paste("nohup python ",codedir,"/GO_Elite.py --species Hs --mod Ensembl --
              nperm,"  --method \"z-score\" --zscore 1.96 --pval 0.01 --num 5 --input ",pathname,
              "/input --denom ",pathname,"/background --output ",pathname,"/output &",sep=""))
 
-################################################################################
-#                                 bookmark                                     #
-################################################################################
-
-
 # Plotting the GO Output
 pathname <- "~/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
 
 uniquemodcolors=uniquemodcolors[-c(2, 14)] # For some reason sometimes modules are not run correctly, therefore won't be able to be plotted so they are excluded
 
-pdf("GOElite_plot_Modules_112718.pdf",height=8,width=12)
+#manually set uniquemodcolors:
+uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
+                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
+                    "pink", "purple", "royalblue", "tan", "grey60")
+
+#for some reason the royalblue module gives errors so I removed that for now
+uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
+                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
+                    "pink", "purple", "tan", "grey60")
+
+
+pdf("GOElite_plot_Modules_01.23.19.pdf",height=8,width=12)
 for(i in 1:length(uniquemodcolors)){
-  thismod= uniquemodcolors[i]
+  thismod = uniquemodcolors[i]
   tmp=read.csv(file=paste(pathname,"/ORA_pruned/",thismod,"_Module-GO_z-score_elite.txt",sep=""),sep="\t")
   tmp=subset(tmp,Ontology.Type!='cellular_component')
   tmp=tmp[,c(2,9)] ## Select GO-terms and Z-score
@@ -784,7 +790,7 @@ dev.off()
 #  Part 7: Cell type enrichment
 #
 #=====================================================================================
-geneInfo=read.csv('geneInfo.cons.DSAD_112418.csv')
+geneInfo=read.csv('geneInfo.cons.MAYO_MSSM_ROSMAP_01.17.19.csv')
 
 datKME <- geneInfo[,c("Ensembl.Gene.ID","Initially.Assigned.Module.Color")] ## Get a list of genes to test for enrichment, e.g. genes with modules defined
 testbackground <- as.character(geneInfo$Ensembl.Gene.ID) # background list
@@ -792,7 +798,6 @@ datKME=subset(datKME,Initially.Assigned.Module.Color!="grey")
 namestestlist <- names(table(datKME[,2])) ## module
 multiTest <- vector(mode = "list", length = length(namestestlist))
 names(multiTest) <- namestestlist
-
 
 for (i in 1:length(multiTest))
 {
@@ -858,7 +863,8 @@ textMatrix1 = paste( txtMat1, '\n', txtMat , sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( ORA.P),nrow=nrow( ORA.P))
 
 # Make heatmap of modules and cell types: neurons, microglia, myelinating oligodendrocytes, astrocytes, and endothelial cells
-pdf("CellTypeEnrich_WGCNAMods_110618.pdf", width=6,height=10)
+#Got a warning message upon running this below block of code
+pdf("CellTypeEnrich_WGCNAMods_01.23.19.pdf", width=6,height=10)
 labeledHeatmap(Matrix=dispMat,
                yLabels=rownames(dispMat),
                yColorLabels=TRUE,
@@ -878,8 +884,8 @@ dev.off()
 #=====================================================================================
 # Will make node and edge plots with hub genes in the center surrounded by all other genes in each module
 
-load("geneInfo.cons.112418.rda")
-load("consensus_112418.rda")
+load("geneInfo.cons.01.17.19.rda")
+load("wgcna_consensus_01.10.19.rda")
 
 #Get the top connected genes in the module
 uniquemodcolors = unique(moduleColor.cons);
@@ -927,3 +933,7 @@ for (mod in uniquemodcolors)  {
 
 }
 dev.off();
+
+################################################################################
+#                                 bookmark                                     #
+################################################################################
