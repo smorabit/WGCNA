@@ -730,7 +730,7 @@ uniquemodcolors=uniquemodcolors[uniquemodcolors!='grey']
 for(i in 1:length(uniquemodcolors)){
   thismod= uniquemodcolors[i]
   ind=which(colnames(geneInfo.cons)==paste("consensus.kME",thismod,sep=""))
-  thisInfo=geneInfo.cons[geneInfo.cons$Initially.Assigned.Module.Color==thismod, c(1, 19, ind)] ##18=Ensembl.ID, 21="SystemCode",ind=kME value
+  thisInfo=geneInfo.cons[geneInfo.cons$Initially.Assigned.Module.Color==thismod, c(1, 26, ind)] ##18=Ensembl.ID, 21="SystemCode",ind=kME value what tf is going on on this line. the c(1,19, ind) is confusing.
   colnames(thisInfo) <- c("Source Identifier","SystemCode","kME")
   write.table(thisInfo,file=paste("./geneInfo/input/",thismod,"_Module.txt",sep=""),row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
 }
@@ -919,7 +919,7 @@ for (mod in uniquemodcolors)  {
   reducedTOM[connections2keep] = 1;
 
   g0 <- graph.adjacency(as.matrix(reducedTOM[1:10,1:10]),mode="undirected",weighted=TRUE,diag=FALSE)
-  layoutMata <- layout.circle(g0)
+  layoutMata <- layout.circle(g0)    
 
   g0 <- graph.adjacency(as.matrix(reducedTOM[11:50,11:50]),mode="undirected",weighted=TRUE,diag=FALSE)
   layoutMatb <- layout.circle(g0)
