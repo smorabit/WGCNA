@@ -78,55 +78,59 @@ mColorh <- mLabelh <- colorLabels <- NULL
   }
 ##stopped working here
 
- ### Relating dendrogram with traits
-datTraits<- targets[,c(5,7,6,4,41,42)]
+### Relating dendrogram with traits
+#datTraits<- targets.TCX[,c(5,7,6,4,41,42)]
+datTraits<- targets.TCX[,c(4,6,7,8,9,11,16,17)]
 
-traitmat=as.data.frame(cbind(as.numeric(factor(datTraits[,1],c("Control","AD")))-1,
-                              as.numeric(datTraits[,2]),
-                              as.factor(datTraits[,3]),
+#traitmat=as.data.frame(cbind(as.numeric(factor(datTraits[,1],c("Control","AD")))-1,
+traitmat=as.data.frame(cbind(as.factor(datTraits[,1]),
+                              as.factor(datTraits[,2]),
+                              as.numeric(datTraits[,3]),
                               as.numeric(datTraits[,4]),
                               as.numeric(datTraits[,5]),
-                              as.numeric(datTraits[,6])))# convert categorical variables in factor and numeric as numeric
+                              as.numeric(datTraits[,6]),
+                              as.factor(datTraits[,7]),
+                              as.numeric(factor(datTraits[,8],c("Control","AD")))-1))# convert categorical variables in factor and numeric as numeric
 
 
 rownames(traitmat)=rownames(datTraits)
-colnames(traitmat)=c("Diagnosis","Age","Sex","RIN","SeqPC1","SeqPC2")
+colnames(traitmat)=c("Sex","BrainRegion.Diagnosis","RIN","RIN2","Age", "PCT_PF_READS_ALIGNED","Region", "Diagnosis")
 
-
-### Stratifying by Age
-
-
-geneSigs=matrix(NA,nrow=6,ncol=ncol(datExpr)) # create a vector to hold the data
+geneSigs=matrix(NA,nrow=8,ncol=ncol(datExpr)) # create a vector to hold the data
 
 for(i in 1:ncol(geneSigs)) {
-
 	exprvec=as.numeric(datExpr[,i]) # get the expression vector for ith gene
-	conditionr=bicor(exprvec, traitmat[,1],use="pairwise.complete.obs")
-	ager=bicor(traitmat[,2],exprvec,use="pairwise.complete.obs")
-	sexr=sqrt(max(summary(lm(exprvec~as.factor(traitmat[,3])))$adj.r.squared,0)) # calculate adjusted R^2s square-root for categorical variables
-	rinr=bicor(traitmat[,4],exprvec,use="pairwise.complete.obs")# calculate r correlation value for numeric variables
-	seq1r=bicor(traitmat[,5],exprvec,use="pairwise.complete.obs")
-	seq2r=bicor(traitmat[,6],exprvec,use="pairwise.complete.obs")
 
+	sexr=bicor(exprvec, traitmat[,1],use="pairwise.complete.obs")
+	braindiagr=bicor(traitmat[,2],exprvec,use="pairwise.complete.obs")
+	#rinr=sqrt(max(summary(lm(exprvec~as.factor(traitmat[,3])))$adj.r.squared,0)) # calculate adjusted R^2s square-root for categorical variables
+  rinr=bicor(traitmat[,3],exprvec,use="pairwise.complete.obs")
+  rin2r=bicor(traitmat[,4],exprvec,use="pairwise.complete.obs")# calculate r correlation value for numeric variables
+  ager=bicor(traitmat[,5],exprvec,use="pairwise.complete.obs")# calculate r correlation value for numeric variables
+  pct_pf_reads_alignedr=bicor(traitmat[,6],exprvec,use="pairwise.complete.obs")
+	regionr=bicor(traitmat[,7],exprvec,use="pairwise.complete.obs")
+  diagnosisr=bicor(traitmat[,8],exprvec,use="pairwise.complete.obs")
 
-	geneSigs[,i]=c(conditionr, ager, sexr, rinr,seq1r,seq2r)
+	geneSigs[,i]=c(sexr, braindiagr, rinr, rin2r,ager,pct_pf_reads_alignedr, regionr, diagnosisr)
 
 	cat('Done for gene...',i,'\n')
-}
+} #there were a ton of warnings...
 
+for (i in 1:nrow(geneSigs)){
+  geneSigs[i,] <- numbers2colors(as.numeric(geneSigs[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+}
 
 geneSigs[1,] =numbers2colors(as.numeric(geneSigs[1,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 geneSigs[2,] =numbers2colors(as.numeric(geneSigs[2,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 geneSigs[3,] =numbers2colors(as.numeric(geneSigs[3,]),signed=FALSE,centered=FALSE,blueWhiteRed(100)[51:100],lim=c(0,1)) # For categorical variables like strain or wt_tg we do not want values, thus lim=c(0,1), and signed and centered=F
-
 geneSigs[4,] =numbers2colors(as.numeric(geneSigs[4,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-
 geneSigs[5,] =numbers2colors(as.numeric(geneSigs[5,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 geneSigs[6,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+geneSigs[7,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+geneSigs[8,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
+geneSigs[6,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 
-rownames(geneSigs)=c("Diagnosis","Age","Sex","RIN","Seq.PC1","Seq.PC2")
+rownames(geneSigs)=c("Sex","BrainRegion.Diagnosis","RIN","RIN2","Age", "PCT_PF_READS_ALIGNED","Region", "Diagnosis")
 
-
-
- rm(TOM,adjacency,dissTOM)
- save(list=ls(),file="WGCNA.rda")
+rm(TOM,adjacency,dissTOM)
+save(list=ls(),file="WGCNA.rda")
