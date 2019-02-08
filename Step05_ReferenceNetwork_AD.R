@@ -9,15 +9,25 @@ library(RColorBrewer); #for part 8
 options(stringsAsFactors=FALSE)
 enableWGCNAThreads()
 
-load("~/data/MAYO_TCX_ADcontrolOnly_Expression_metaData.rda")
+#===============================================================================
+#
+#  Part 1: Load data
+#
+#===============================================================================
 
-##########################
+load("~/data/MAYO_TCX_ADcontrolOnly_Expression_metaData.rda")
 
 datExpr=as.data.frame(t(normExpr.TCX))
 normExpr=as.data.frame(t(datExpr))
 save(targets.TCX,datExpr,normExpr,file="DiscoverySet_AD.rda")
 
 #################################################
+
+#===============================================================================
+#
+#  Part 2: Choose soft thresholding power
+#
+#===============================================================================
 
 pdf("1.1_power.pdf", height=10, width=18)
 # Choose a set of soft-thresholding powers
@@ -47,7 +57,11 @@ main = paste("Mean connectivity"))
 text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 dev.off()
 
-##################################################
+#=====================================================================================
+#
+#  Part 3: Network Construction
+#
+#=====================================================================================
 
 softPower=8 ## for AD discovery set
 
@@ -56,6 +70,7 @@ adjacency = adjacency(datExpr, power = softPower, type = "signed",corFnc="bicor"
 TOM = TOMsimilarity(adjacency);
 dissTOM = 1-TOM
 geneTree = flashClust(as.dist(dissTOM), method = "average");
+
 # Plot the resulting clustering tree (dendrogram)
 save(TOM,dissTOM,geneTree,adjacency,softPower,file="TOM.rda")
 
@@ -76,21 +91,19 @@ mColorh <- mLabelh <- colorLabels <- NULL
       }
     }
   }
-##stopped working here
 
 ### Relating dendrogram with traits
 #datTraits<- targets.TCX[,c(5,7,6,4,41,42)]
 datTraits<- targets.TCX[,c(4,6,7,8,9,11,16,17)]
 
-#traitmat=as.data.frame(cbind(as.numeric(factor(datTraits[,1],c("Control","AD")))-1,
 traitmat=as.data.frame(cbind(as.factor(datTraits[,1]),
                               as.factor(datTraits[,2]),
                               as.numeric(datTraits[,3]),
                               as.numeric(datTraits[,4]),
                               as.numeric(datTraits[,5]),
                               as.numeric(datTraits[,6]),
-                              as.factor(datTraits[,7]),
-                              as.numeric(factor(datTraits[,8],c("Control","AD")))-1))# convert categorical variables in factor and numeric as numeric
+                              as.numeric(as.factor(datTraits[,7])),
+                              as.numeric(as.factor(datTraits[,8]))))
 
 
 rownames(traitmat)=rownames(datTraits)
@@ -100,7 +113,6 @@ geneSigs=matrix(NA,nrow=8,ncol=ncol(datExpr)) # create a vector to hold the data
 
 for(i in 1:ncol(geneSigs)) {
 	exprvec=as.numeric(datExpr[,i]) # get the expression vector for ith gene
-
 	sexr=bicor(exprvec, traitmat[,1],use="pairwise.complete.obs")
 	braindiagr=bicor(traitmat[,2],exprvec,use="pairwise.complete.obs")
 	#rinr=sqrt(max(summary(lm(exprvec~as.factor(traitmat[,3])))$adj.r.squared,0)) # calculate adjusted R^2s square-root for categorical variables
@@ -120,17 +132,39 @@ for (i in 1:nrow(geneSigs)){
   geneSigs[i,] <- numbers2colors(as.numeric(geneSigs[i,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
 }
 
-geneSigs[1,] =numbers2colors(as.numeric(geneSigs[1,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[2,] =numbers2colors(as.numeric(geneSigs[2,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[3,] =numbers2colors(as.numeric(geneSigs[3,]),signed=FALSE,centered=FALSE,blueWhiteRed(100)[51:100],lim=c(0,1)) # For categorical variables like strain or wt_tg we do not want values, thus lim=c(0,1), and signed and centered=F
-geneSigs[4,] =numbers2colors(as.numeric(geneSigs[4,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[5,] =numbers2colors(as.numeric(geneSigs[5,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[6,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[7,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[8,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-geneSigs[6,] =numbers2colors(as.numeric(geneSigs[6,]),signed=TRUE,centered=TRUE,blueWhiteRed(100),lim=c(-1,1))
-
 rownames(geneSigs)=c("Sex","BrainRegion.Diagnosis","RIN","RIN2","Age", "PCT_PF_READS_ALIGNED","Region", "Diagnosis")
 
 rm(TOM,adjacency,dissTOM)
 save(list=ls(),file="WGCNA.rda")
+load("TOM.rda")
+
+############# Calculate modules for each set of parameters #####################
+mColorh <- mLabelh <- colorLabels <- NULL
+for (minModSize in c(40,100,160)) {
+  for (dthresh in c(0.1,0.2,0.25)) {
+    for (ds in c(2,4)) {
+      print("Trying parameters:")
+      print(c(minModSize,dthresh,ds))
+      tree = cutreeHybrid(dendro = geneTree, pamStage=FALSE,
+                          minClusterSize = minModSize, cutHeight = 0.99999999,
+                          deepSplit = ds, distM = as.matrix(dissTOM))
+
+      merged <- mergeCloseModules(exprData = datExpr,colors = tree$labels,
+                                  cutHeight = dthresh)
+      mColorh <- cbind(mColorh,labels2colors(merged$colors))
+      mLabelh <- c(mLabelh,paste("DS=",ds," mms=\n",minModSize," dcor=",dthresh))
+    }
+  }
+}
+
+# Plotting modules for each set of params and traits
+mColorh1 <- cbind(mColorh, geneSigs[1,], geneSigs[2,], geneSigs[3,], geneSigs[4,],
+                  geneSigs[5,], geneSigs[6,], geneSigs[7,], geneSigs[8,])
+
+
+rownames_geneSigs = c(rownames(geneSigs))
+mLabelh1=c(mLabelh,rownames_geneSigs)
+
+pdf("MAYO_TOM_MultiDendro_DSAD_02.07.19.pdf",height=25,width=20)
+plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed network (MAYO) with power = 8"));
+dev.off()
