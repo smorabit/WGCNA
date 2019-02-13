@@ -1,4 +1,5 @@
 
+setwd("~/modulePreservation/")
 
 
 #########Zhang et al HBRTC Prefrontal cortex
@@ -55,6 +56,7 @@ checkSets(multiExpr) # check data size
 multiColors=list(Mayo.AD = moduleColors.Mayo)
 filename="mp_MSSM.STG_Mayo_AD.rda"
 save(list=ls(),file=filename)
+
 
 
 
@@ -344,7 +346,6 @@ multiColors=list(BLSA_Proteomics = moduleColors.BLSA)
 filename="mp_Mayo_AD_BLSAEmoryRef.rda"
 save(list=ls(),file=filename)
 
-
 ############ROSMAP Dataset
 library(WGCNA)
 
@@ -529,8 +530,9 @@ filename="mp_EC_Oligomer_mouse_Mayo_AD.rda"
 save(list=ls(),file=filename)
 
 
-
-########## APP_Oligomers -- Dendate Gyrus
+###############################################################################
+########## APP_Oligomers -- Dendate Gyrus [ ]
+###############################################################################
 
 rm(list=ls())
 load('/home/vivek//AMP_AD/Mayo/Analysis/Step05_ModulePreserv/AD/MouseModels/APP_Oligomers/CombatCorrected_DG.rda')
@@ -564,11 +566,8 @@ nSets=2
 gnS=intersect(colnames(datExpr.Ref),colnames(datExpr.DG))
 datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
 
-
 datExpr.DG=datExpr.DG[,match(gnS,colnames(datExpr.DG))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
-
-
 
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), Oligomer_DG_mouse =list(data= datExpr.DG))
@@ -582,16 +581,16 @@ save(list=ls(),file=filename)
 
 
 
-
-###### Mouse rTG4510 and rTG4510
-
+###############################################################################
+###### Mouse rTG4510 and rTG4510 [x]
+###############################################################################
 rm(list=ls())
 load('/home/vivek//AMP_AD/Mayo/Analysis/Step05_ModulePreserv/AD/MouseModels/Tg4510/Normalized_Expressed_genes.rda')
 normExpr=normExpr[,targets$outlier==FALSE]
 targets=subset(targets,outlier==FALSE)
 
-normExpr_rTG4510=normExpr[,targets$Experiment=='MAPT_rTG4510']
-targets_rTG4510=subset(targets,Experiment=='MAPT_rTG4510')
+normExpr_rTG4510=normExpr[,targets$Experiment=='rTG4510']
+targets_rTG4510=subset(targets,Experiment=='rTG4510')
 
 datExpr=as.data.frame(t(normExpr_rTG4510))
 
@@ -603,9 +602,6 @@ ensembl=ensembl[match(gnS,ensembl$Ensembl.Gene.ID),]
 datExpr=datExpr[,match(gnS,colnames(datExpr))]
 colnames(datExpr) <- ensembl$Human.Ensembl.Gene.ID
 datExpr.rTG4510=datExpr
-
-
-library(WGCNA)
 
 goodSamplesGenes(datExpr.rTG4510) -> tmp ## one gene has no variance; removing the gene
 rm.Gene=colnames(datExpr.rTG4510)[which(tmp$goodGenes==FALSE)] ##remove this gene
@@ -623,24 +619,21 @@ nSets=2
 gnS=intersect(colnames(datExpr.Ref),colnames(datExpr.rTG4510))
 datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
 
-
 datExpr.rTG4510=datExpr.rTG4510[,match(gnS,colnames(datExpr.rTG4510))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
-
-
 
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), rTG4510mouse =list(data= datExpr.rTG4510))
 library(WGCNA)
 checkSets(multiExpr) # check data size
 multiColors=list(Mayo.AD = moduleColors.Mayo)
-filename="mp_rTG4510mouse_Mayo_AD.rda"
+filename="mp_rTG4510_2_mouse_Mayo_AD.rda"
 save(list=ls(),file=filename)
 
 
-
-
-####rTg4510
+###############################################################################
+#     rTg4510 [x]
+###############################################################################
 
 rm(list=ls())
 load('/home/vivek//AMP_AD/Mayo/Analysis/Step05_ModulePreserv/AD/MouseModels/Tg4510/Normalized_Expressed_genes.rda')
@@ -662,8 +655,6 @@ colnames(datExpr) <- ensembl$Human.Ensembl.Gene.ID
 datExpr.rTG4510=datExpr
 
 
-library(WGCNA)
-
 goodSamplesGenes(datExpr.rTG4510) -> tmp ## one gene has no variance; removing the gene
 rm.Gene=colnames(datExpr.rTG4510)[which(tmp$goodGenes==FALSE)] ##remove this gene
 a=setdiff(colnames(datExpr.rTG4510),rm.Gene)
@@ -684,11 +675,8 @@ datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
 datExpr.rTG4510=datExpr.rTG4510[,match(gnS,colnames(datExpr.rTG4510))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
 
-
-
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), rTG4510mouse =list(data= datExpr.rTG4510))
-library(WGCNA)
 checkSets(multiExpr) # check data size
 multiColors=list(Mayo.AD = moduleColors.Mayo)
 filename="mp_rTG4510mouse_Mayo_AD.rda"
