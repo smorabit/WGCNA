@@ -419,7 +419,6 @@ datExpr.APP=datExpr.APP[,match(gnS,colnames(datExpr.APP))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
 
 
-
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), APPmouse =list(data= datExpr.APP))
 library(WGCNA)
@@ -427,9 +426,6 @@ checkSets(multiExpr) # check data size
 multiColors=list(Mayo.AD = moduleColors.Mayo)
 filename="mp_APPmouse_Mayo_AD.rda"
 save(list=ls(),file=filename)
-
-
-
 
 
 #### CRND8 mouse
@@ -449,14 +445,10 @@ datExpr=datExpr[,match(gnS,colnames(datExpr))]
 colnames(datExpr) <- ensembl$Human.Ensembl.Gene.ID
 datExpr.CRND8=datExpr
 
-
-
 goodSamplesGenes(datExpr.CRND8) -> tmp ## one gene has no variance; removing the gene
 rm.Gene=colnames(datExpr.CRND8)[which(tmp$goodGenes==FALSE)] ##remove this gene
 a=setdiff(colnames(datExpr.CRND8),rm.Gene)
 datExpr.CRND8=datExpr.CRND8[,match(a,colnames(datExpr.CRND8))]
-
-
 
 load('/home/vivek/AMP_AD/AMP_AD_NormalizedData_rWGCNAs/Expression_Jan2019/Mayo/rWGCNA/rWGCNA_Mayo_ForPreservation.rda')
 
@@ -470,19 +462,16 @@ datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
 datExpr.CRND8=datExpr.CRND8[,match(gnS,colnames(datExpr.CRND8))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
 
-
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), CRND8mouse =list(data= datExpr.CRND8))
-library(WGCNA)
 checkSets(multiExpr) # check data size
 multiColors=list(Mayo.AD = moduleColors.Mayo)
 filename="mp_CRND8mouse_Mayo_AD.rda"
 save(list=ls(),file=filename)
 
-
-
-########## APP_Oligomers -- Entorhinal Cortex
-
+###############################################################################
+########## APP_Oligomers -- Entorhinal Cortex [x]
+###############################################################################
 
 load('/home/vivek//AMP_AD/Mayo/Analysis/Step05_ModulePreserv/AD/MouseModels/APP_Oligomers/Regressed_EC_data.rda')
 datExpr=as.data.frame(t(normExpr.reg))
@@ -495,9 +484,6 @@ ensembl=ensembl[match(gnS,ensembl$Ensembl.Gene.ID),]
 datExpr=datExpr[,match(gnS,colnames(datExpr))]
 colnames(datExpr) <- ensembl$Human.Ensembl.Gene.ID
 datExpr.EC=datExpr
-
-
-library(WGCNA)
 
 goodSamplesGenes(datExpr.EC) -> tmp ## one gene has no variance; removing the gene
 rm.Gene=colnames(datExpr.EC)[which(tmp$goodGenes==FALSE)] ##remove this gene
@@ -515,11 +501,8 @@ nSets=2
 gnS=intersect(colnames(datExpr.Ref),colnames(datExpr.EC))
 datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
 
-
 datExpr.EC=datExpr.EC[,match(gnS,colnames(datExpr.EC))]
 moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
-
-
 
 multiExpr =vector(mode="list",length=nSets)
 multiExpr =list(Mayo.AD =list(data= datExpr.Ref1), Oligomer_EC_mouse =list(data= datExpr.EC))
@@ -531,7 +514,7 @@ save(list=ls(),file=filename)
 
 
 ###############################################################################
-########## APP_Oligomers -- Dendate Gyrus [ ]
+########## APP_Oligomers -- Dendate Gyrus [x]
 ###############################################################################
 
 rm(list=ls())

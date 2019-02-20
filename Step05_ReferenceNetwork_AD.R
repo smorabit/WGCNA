@@ -168,3 +168,57 @@ mLabelh1=c(mLabelh,rownames_geneSigs)
 pdf("MAYO_TOM_MultiDendro_DSAD_02.07.19.pdf",height=25,width=20)
 plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed network (MAYO) with power = 8"));
 dev.off()
+
+### selecting parameters for the final dendrogram based on observations ###
+
+#select dendrogram parameters
+mms <- 100
+ds <- 4
+dthresh <- 0.2
+
+tree <- cutreeHybrid(dendro = geneTree, pamStage=FALSE,
+                    minClusterSize = mms, cutHeight = 0.99999999,
+                    deepSplit = ds, distM = as.matrix(dissTOM))
+
+merged <- mergeCloseModules(exprData = datExpr,colors = tree$labels,
+                            cutHeight = dthresh)
+
+# Eigengenes of the new merged modules:
+MEs <- merged$newMEs
+
+# Module color associated with each gene
+moduleColor.cons <- labels2colors(merged$colors)
+
+mColorh <- cbind(labels2colors(merged$colors))
+mLabelh <- c("colors")
+
+mColorh1 <- cbind(mColorh, geneSigs[1,], geneSigs[2,], geneSigs[3,], geneSigs[4,],
+                  geneSigs[5,], geneSigs[6,], geneSigs[7,], geneSigs[8,])
+
+rownames_geneSigs = c(rownames(geneSigs))
+mLabelh1=c(mLabelh,rownames_geneSigs)
+
+pdf("MAYO_TOM_FinalDendro_02.08.19.pdf",height=10,width=16)
+plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network (MAYO) with power = 8, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
+dev.off()
+
+
+#### stuff for later ####
+
+ensembl <- read.csv("/home/vivek/FTD_Seeley/Analysis_Nov2017/ENSG85_Human.csv.gz") # Convert Ensembl gene ID to gene names
+consensus.KMEs$Ensembl.Gene.ID <- paste(rownames(consensus.KMEs))
+
+merged <- merge(consensus.KMEs,ensembl,by.x="Ensembl.Gene.ID",by.y="Ensembl.Gene.ID",all.x=T)
+ind <- match(consensus.KMEs$Ensembl.Gene.ID,merged$Ensembl.Gene.ID)
+merged1 <- merged[ind,]
+consensus.KMEs.annot <- merged1
+
+geneInfo.cons <- as.data.frame(cbind(consensus.KMEs.annot$Ensembl.Gene.ID,consensus.KMEs.annot$Associated.Gene.Name,
+                                  moduleColor.cons,consensus.KMEs))
+geneInfo.cons <- geneInfo.cons[,-ncol(geneInfo.cons)] # check if last column is Ensembl gene id
+
+colnames(geneInfo.cons)[1]= "Ensembl.Gene.ID"
+colnames(geneInfo.cons)[2]= "GeneSymbol"
+colnames(geneInfo.cons)[3]= "Initially.Assigned.Module.Color"
+
+save(list=ls(),file="MAYO_WGCNA.rda")

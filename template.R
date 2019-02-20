@@ -1,24 +1,23 @@
 library(WGCNA)
-load('/home/vivek/AMP_AD/Mayo/Analysis/Step05_ModulePreserv/AD/Zhang_HBRTC_PFC/Zhang_ENSG_PFC.rda')
-load('/home/vivek/AMP_AD/AMP_AD_NormalizedData_rWGCNAs/Expression_Jan2019/Mayo/rWGCNA/rWGCNA_Mayo_ForPreservation.rda') #this is where the file will be (no file now)
+setwd("~/modulePreservation")
 
-setLabels=c("Mayo.AD","ZhangPFC")
+load('/home/vivek/AMP_AD/AMP_AD_NormalizedData_rWGCNAs/Expression_Jan2019/Mayo/rWGCNA/rWGCNA_Mayo_ForPreservation.rda') #this is where the file will be (no file now)
+load('mp_rTG4510mouse_Mayo_AD.rda')
+
+setLabels=c("Mayo.AD","rTG4510mouse")
 shortLabels=setLabels
 nSets=2
 
-gnS=intersect(colnames(datExpr.Ref),colnames(datExpr.Zhang)) #intersect genes between zhang and mayo
-datExpr.Ref1=datExpr.Ref[,match(gnS,colnames(datExpr.Ref))]
-datExpr.Zhang=datExpr.Zhang[,match(gnS,colnames(datExpr.Zhang))]
-moduleColors.Mayo=moduleColors.Mayo[match(gnS,colnames(datExpr.Ref))]
-
-MEs = moduleEigengenes(datExpr.Zhang, modulecolors.Mayo)$eigengenes #correlate these with traits in zhang data
+MEs = moduleEigengenes(datExpr.rTG4510, moduleColors.Mayo)$eigengenes
 
 ##############################################################################
 # change below code from mt sinai to whatever other dataset you are working on
 ##############################################################################
 
-nSamples = nrow(datExpr.Ref.MSSM);
-nGenes = ncol(datExpr.Ref.MSSM);
+nSamples = nrow(datExpr.rTG4510);
+nGenes = ncol(datExpr.rTG4510);
+
+##### next time pick labels to correlate!!
 
 Diagnosis <- as.numeric(relevel(factor(as.character(targets.Ref.MSSM$Diagnosis)), 'CONTROL'))
 Age <- as.numeric(targets.Ref.MSSM$AOD)
