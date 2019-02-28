@@ -23,7 +23,6 @@ plotMods = !(modColors %in% c("grey", "gold"));
 text = modColors[plotMods];
 text1=text
 
-
 # Auxiliary convenience variable
 plotData = cbind(mp$preservation$observed[[ref]][[test]][, 2], mp$preservation$Z[[ref]][[test]][, 2])
 # Main titles for the plot

@@ -63,7 +63,7 @@ dev.off()
 #
 #=====================================================================================
 
-softPower=8 ## for AD discovery set
+softPower=12 ## for AD discovery set
 
 adjacency = adjacency(datExpr, power = softPower, type = "signed",corFnc="bicor",corOptions="use='pairwise.complete.obs'"); #this line takes a while to run
 
@@ -198,8 +198,8 @@ mColorh1 <- cbind(mColorh, geneSigs[1,], geneSigs[2,], geneSigs[3,], geneSigs[4,
 rownames_geneSigs = c(rownames(geneSigs))
 mLabelh1=c(mLabelh,rownames_geneSigs)
 
-pdf("MAYO_TOM_FinalDendro_02.08.19.pdf",height=10,width=16)
-plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network (MAYO) with power = 8, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
+pdf("MAYO_TOM_softpower16_02.20.19.pdf",height=10,width=16)
+plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,dendroLabels=FALSE,main= paste("Signed bicor network (MAYO) with power = 16, mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
 dev.off()
 
 

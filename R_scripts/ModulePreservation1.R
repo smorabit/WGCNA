@@ -493,6 +493,23 @@ datExpr.EC=datExpr.EC[,match(a,colnames(datExpr.EC))]
 
 load('/home/vivek/AMP_AD/AMP_AD_NormalizedData_rWGCNAs/Expression_Jan2019/Mayo/rWGCNA/rWGCNA_Mayo_ForPreservation.rda')
 
+MEs=moduleEigengenes(datExpr.EC, colors = moduleColors.Mayo, nPC=1)$eigengenes
+MEs=orderMEs(MEs)
+uniquemodcolors=unique(moduleColors.Mayo)
+uniquemodcolors=uniquemodcolors[uniquemodcolors!='grey']
+
+group=factor(targets$strain)
+group=factor(group,c('WT','oligomerogenic','fibrillogenic'))
+
+pdf("ME_Condition_OligomerMouse_eCTX_MayoRef.pdf",height=4,width=4.5)
+for (j in 1:length(uniquemodcolors)){
+	   thismod= uniquemodcolors[j]
+	thisME <- MEs[,paste("ME",thismod,sep="")]
+	boxplot(thisME~group,col=c("blue","red","green"),main=paste(thismod, "Module ME ",sep=""), ylab="Module Eigengene Value")
+
+}
+dev.off()
+
 ######
 setLabels=c("Mayo.AD","Oligomer_EC_mouse")
 shortLabels=setLabels
@@ -514,7 +531,7 @@ save(list=ls(),file=filename)
 
 
 ###############################################################################
-########## APP_Oligomers -- Dendate Gyrus [x]
+########## APP_Oligomers -- Dentate Gyrus [x]
 ###############################################################################
 
 rm(list=ls())

@@ -1,0 +1,44 @@
+# nSets <- 1
+# setLabels <- c("MAYO")
+# multiExpr <- vector(mode="list", length=length(setLabels))
+# multiExpr[[1]] <- list(data=datExpr.Ref)
+# exprSize <- checkSets(multiExpr)
+#
+# consKME1=consensusKME(multiExpr=multiExpr, moduleColors.cons,
+#                       multiEigengenes = NULL,
+#                       consensusQuantile = 0.2,
+#                       signed = TRUE)
+
+geneInfo.cons <- as.data.frame(cbind(colnames(datExpr.Ref), colnames(datExpr.Ref), moduleColors.cons))
+geneInfo.cons <- geneInfo.cons[,-ncol(geneInfo.cons)] # check if last column is Ensembl gene id
+
+colnames(geneInfo.cons)[1]= "Ensembl.Gene.ID"
+colnames(geneInfo.cons)[2]= "GeneSymbol"
+colnames(geneInfo.cons)[3]= "Initially.Assigned.Module.Color"
+
+write.csv(geneInfo.cons,'geneInfo.cons.MAYO.csv') #Final annotated geneInfo file is input to the rest of the analysis
+
+
+#=====================================================================================
+#
+#  Part 4: Get annotated gene lists and their associated kMEs
+#
+#=====================================================================================
+ensembl <- read.csv("/pub/smorabit/WGCNA/ENSG85_Human.csv.gz") # Convert Ensembl gene ID to gene names
+consensus.KMEs$Ensembl.Gene.ID <- paste(rownames(consensus.KMEs))
+
+merged <- merge(consensus.KMEs,ensembl,by.x="Ensembl.Gene.ID",by.y="Ensembl.Gene.ID",all.x=T)
+ind <- match(consensus.KMEs$Ensembl.Gene.ID,merged$Ensembl.Gene.ID)
+merged1 <- merged[ind,]
+consensus.KMEs.annot <- merged1
+
+geneInfo.cons <- as.data.frame(cbind(consensus.KMEs.annot$Ensembl.Gene.ID,consensus.KMEs.annot$Associated.Gene.Name,
+                                  moduleColor.cons,consensus.KMEs))
+geneInfo.cons <- geneInfo.cons[,-ncol(geneInfo.cons)] # check if last column is Ensembl gene id
+
+colnames(geneInfo.cons)[1]= "Ensembl.Gene.ID"
+colnames(geneInfo.cons)[2]= "GeneSymbol"
+colnames(geneInfo.cons)[3]= "Initially.Assigned.Module.Color"
+
+write.csv(geneInfo.cons,'geneInfo.cons.MAYO_MSSM_ROSMAP_01.17.19.csv') #Final annotated geneInfo file is input to the rest of the analysis
+save(list=ls(),file='geneInfo.cons.01.17.19.rda')
