@@ -12,30 +12,45 @@ enableWGCNAThreads()
 #=====================================================================================
 
 # load relevant .rda files:
-load("/pub/smorabit/Mayo/rWGCNA/rWGCNA_Mayo_ForPreservation.rda")
-load("/pub/smorabit/Mayo/rWGCNA/rWGCNA.rda")
+load("rWGCNA_Mayo_ForPreservation.rda")
+load("rWGCNA.rda")
+
+# Convert Ensembl gene ID to gene names
+ensembl <- read.csv("ENSG85_Human.csv.gz")
 
 # compute signed eigengene based connectivity (also known as module membership)
 kme <- signedKME(datExpr.Ref, MEs.cons_Ref)
 
+# get gene names based on ensembl ID in our datExpr object:
+geneNames <- ensembl$Associated.Gene.Name[match(colnames(datExpr.Ref), ensembl$Ensembl.Gene.ID)]
+
 # put relevant info into a dataframe, then save it!
-geneInfo.cons <- as.data.frame(cbind(colnames(datExpr.Ref), colnames(datExpr.Ref), moduleColors.cons, kme))
-colnames(geneInfo.cons)[1]= "Ensembl.Gene.ID"
-colnames(geneInfo.cons)[2]= "GeneSymbol"
-colnames(geneInfo.cons)[3]= "Initially.Assigned.Module.Color"
-write.csv(geneInfo.cons,'geneInfo.cons.MAYO.csv') #Final annotated geneInfo file is input to the rest of the analysis
+geneInfo.mayo <- as.data.frame(cbind(colnames(datExpr.Ref), geneNames, moduleColors.cons, kme))
+colnames(geneInfo.mayo)[1]= "Ensembl.Gene.ID"
+colnames(geneInfo.mayo)[2]= "GeneSymbol"
+colnames(geneInfo.mayo)[3]= "Initially.Assigned.Module.Color"
+
+#Final annotated geneInfo file is input to the rest of the analysis
+write.csv(geneInfo.mayo,'geneInfo.MAYO.csv')
+
+#plot dendrogram
+pdf("mayo_rWGCNA_dendrogram.pdf",height=10,width=16)
+plotDendroAndColors(consTree, mColorh2, groupLabels = mLabelh2,addGuide=TRUE,dendroLabels=FALSE,main= paste("Mayo rWGCNA signed bicor network with mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
+dev.off()
 
 #=====================================================================================
 #  Part 1: GO analysis
 #=====================================================================================
 
-dir.create("./geneInfo")
-dir.create("./geneInfo/background/")
-dir.create("./geneInfo/input/")
-dir.create("./geneInfo/output/")
+geneInfo.mayo <- read.csv("geneInfo.MAYO.csv")
 
-geneInfo.cons$SystemCode <- rep("En",length=nrow(geneInfo.cons))
-background <- geneInfo.cons[,"Ensembl.Gene.ID"]
+# dir.create("./geneInfo")
+# dir.create("./geneInfo/background/")
+# dir.create("./geneInfo/input/")
+# dir.create("./geneInfo/output/")
+
+geneInfo.mayo$SystemCode <- rep("En",length=nrow(geneInfo.mayo))
+background <- geneInfo.mayo[,"Ensembl.Gene.ID"]
 background <- as.data.frame(background)
 
 ## Output files for GO elite
@@ -49,62 +64,206 @@ uniquemodcolors <- uniquemodcolors[uniquemodcolors!='grey'] #do I need to exclud
 # i = Number of modules
 for(i in 1:length(uniquemodcolors)){
   thismod= uniquemodcolors[i]
-  ind=which(colnames(geneInfo.cons)==paste("kME",thismod,sep=""))
-  thisInfo=geneInfo.cons[geneInfo.cons$Initially.Assigned.Module.Color==thismod, c(1, dim(geneInfo.cons)[2], ind)]
+  ind=which(colnames(geneInfo.mayo)==paste("kME",thismod,sep=""))
+  thisInfo=geneInfo.mayo[geneInfo.mayo$Initially.Assigned.Module.Color==thismod, c(1, dim(geneInfo.mayo)[2], ind)]
   colnames(thisInfo) <- c("Source Identifier","SystemCode","kME")
   write.table(thisInfo,file=paste("./geneInfo/input/",thismod,"_Module.txt",sep=""),row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
 }
 
 # Run GO elite as nohupped shell script:
-codedir <- "~/bin/GO-Elite_v.1.2.5-Py"
-pathname <- "/pub/smorabit/WGCNA/geneInfo"
+codedir <- "/home/vivek/bin/GO-Elite_v.1.2.5-Py"
+pathname <- "~/mayo_WGCNA/geneInfo"
 nperm=10000
 system(paste("nohup python ",codedir,"/GO_Elite.py --species Hs --mod Ensembl --permutations ",
              nperm,"  --method \"z-score\" --zscore 1.96 --pval 0.01 --num 5 --input ",pathname,
              "/input --denom ",pathname,"/background --output ",pathname,"/output &",sep=""))
-#
-# #########################################
-# # stopped here last time
-# #########################################
-#
-# # Plotting the GO Output
-# pathname <- "~/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
-#
-# uniquemodcolors=uniquemodcolors[-c(2, 14)] # For some reason sometimes modules are not run correctly, therefore won't be able to be plotted so they are excluded
-#
-# #manually set uniquemodcolors:
-# uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
-#                     "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
-#                     "pink", "purple", "royalblue", "tan", "grey60")
-#
-# #for some reason the royalblue module gives errors so I removed that for now
-# uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
-#                     "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
-#                     "pink", "purple", "tan", "grey60")
-#
-#
-# pdf("GOElite_plot_Modules_01.23.19.pdf",height=8,width=12)
-# for(i in 1:length(uniquemodcolors)){
-#   thismod = uniquemodcolors[i]
-#   tmp=read.csv(file=paste(pathname,"/ORA_pruned/",thismod,"_Module-GO_z-score_elite.txt",sep=""),sep="\t")
-#   tmp=subset(tmp,Ontology.Type!='cellular_component')
-#   tmp=tmp[,c(2,9)] ## Select GO-terms and Z-score
-#   tmp=tmp[order(tmp$Z.Score,decreasing=T),] #
-#   if (nrow(tmp)<10){
-#     tmp1=tmp ## Take top 10 Z-score
-#     tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
-#     par(mar=c(5,40,5,2))
-#     barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
-#     abline(v=2,col="red")
-#   } else {
-#     tmp1=tmp[c(1:10),] ## Take top 10 Z-score
-#     tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
-#     par(mar=c(5,40,5,2))
-#     barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
-#     abline(v=2,col="red")
-#     }
-#
-#   cat('Done ...',thismod,'\n')
-# }
-#
-# dev.off()
+
+
+# Plotting the GO Output
+pathname <- "~/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
+
+uniquemodcolors=uniquemodcolors[-c(2, 14)] # For some reason sometimes modules are not run correctly, therefore won't be able to be plotted so they are excluded
+
+#manually set uniquemodcolors:
+uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
+                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
+                    "pink", "purple", "royalblue", "tan", "grey60")
+
+#for some reason the royalblue module gives errors so I removed that for now
+uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
+                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
+                    "pink", "purple", "tan", "grey60")
+
+
+pdf("GOElite_plot_Modules_01.23.19.pdf",height=8,width=12)
+for(i in 1:length(uniquemodcolors)){
+  thismod = uniquemodcolors[i]
+  tmp=read.csv(file=paste(pathname,"/ORA_pruned/",thismod,"_Module-GO_z-score_elite.txt",sep=""),sep="\t")
+  tmp=subset(tmp,Ontology.Type!='cellular_component')
+  tmp=tmp[,c(2,9)] ## Select GO-terms and Z-score
+  tmp=tmp[order(tmp$Z.Score,decreasing=T),] #
+  if (nrow(tmp)<10){
+    tmp1=tmp ## Take top 10 Z-score
+    tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
+    par(mar=c(5,40,5,2))
+    barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
+    abline(v=2,col="red")
+  } else {
+    tmp1=tmp[c(1:10),] ## Take top 10 Z-score
+    tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
+    par(mar=c(5,40,5,2))
+    barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
+    abline(v=2,col="red")
+    }
+
+  cat('Done ...',thismod,'\n')
+}
+
+dev.off()
+
+#=====================================================================================
+#  Part 2: Cell type enrichment
+#=====================================================================================
+geneInfo <- read.csv('geneInfo.MAYO.csv')
+
+# Get a list of genes to test for enrichment, e.g. genes with modules defined
+datKME <- geneInfo[,c("Ensembl.Gene.ID","Initially.Assigned.Module.Color")]
+testbackground <- as.character(geneInfo$Ensembl.Gene.ID) # background list
+datKME <- subset(datKME,Initially.Assigned.Module.Color!="grey")
+namestestlist <- names(table(datKME[,2])) ## module
+multiTest <- vector(mode = "list", length = length(namestestlist))
+names(multiTest) <- namestestlist
+
+for (i in 1:length(multiTest))
+{
+  multiTest[[i]] <- datKME[datKME[,2]==namestestlist[i],1]
+}
+
+## From Zhang et al., 2014 - ## CSV file with reference genes in 1st column, annotated list with Category in 2nd
+datCells <- read.csv("/home/vivek//bin/ZhangEtAlCellTypeList_humanENSG.csv")
+
+## Set up reference lists
+namesreflist <- names(table(datCells[,2])) ## category or module color
+multiRef <- vector(mode = "list", length = length(namesreflist))
+names(multiRef) <- namesreflist
+for (i in 1:length(multiRef))
+{
+  multiRef[[i]] <- datCells[datCells[,2]==namesreflist[i],3]
+}
+
+refbackground<- testbackground
+
+source('/home/vivek//AD/Zhang/ORA.R')
+
+ORA.OR = matrix(NA,nrow=length(multiTest),ncol=length(multiRef));
+colnames(ORA.OR) = names(multiRef);
+rownames(ORA.OR) = names(multiTest);
+ORA.P = matrix(NA,nrow=length(multiTest),ncol=length(multiRef));
+colnames(ORA.P) = names(multiRef);
+rownames(ORA.P) = names(multiTest);
+
+for (i in 1:length(multiRef)) {
+  for (j in 1:length(multiTest)) {
+    result = ORA(multiTest[[j]],multiRef[[i]],testbackground,refbackground);
+    ORA.OR[j,i] = result[1];
+    ORA.P[j,i] = result[2];
+  }
+}
+
+ORA.OR<-apply(ORA.OR,2,as.numeric)
+dim(ORA.OR)<-dim(ORA.P)
+
+##FDR correct
+FDRmat.Array <- matrix(p.adjust( ORA.P,method="fdr"),nrow=nrow( ORA.P),ncol=ncol( ORA.P))
+rownames(  FDRmat.Array)=rownames(ORA.P)
+colnames(  FDRmat.Array)=colnames(ORA.P)
+
+ORA.P=matrix(as.numeric(ORA.P),nrow=nrow( ORA.P),ncol=ncol( ORA.P))
+ORA.OR=matrix(as.numeric(ORA.OR),nrow=nrow( ORA.OR),ncol=ncol( ORA.OR))
+rownames(ORA.P) <- rownames(ORA.OR) <- rownames(  FDRmat.Array)
+colnames(ORA.P) <- colnames(ORA.OR) <- colnames(  FDRmat.Array)
+
+dispMat <- ORA.OR ## You can change this to be just log2(Bmat) if you want the color to reflect the odds ratios
+#Use the text function with the FDR filter in labeledHeatmap to add asterisks
+txtMat <-  ORA.OR
+txtMat[FDRmat.Array >0.05] <- ""
+txtMat[FDRmat.Array <0.05&FDRmat.Array >0.01] <- "*"
+txtMat[FDRmat.Array <0.01&FDRmat.Array >0.005] <- "**"
+txtMat[FDRmat.Array <0.005] <- "***"
+
+txtMat1 <- signif( ORA.OR,2)
+txtMat1[txtMat1<2] <- ""
+
+textMatrix1 = paste( txtMat1, '\n', txtMat , sep = '');
+textMatrix1= matrix(textMatrix1,ncol=ncol( ORA.P),nrow=nrow( ORA.P))
+
+# Make heatmap of modules and cell types: neurons, microglia, myelinating oligodendrocytes, astrocytes, and endothelial cells
+#Got a warning message upon running this below block of code
+pdf("CellTypeEnrich_mayo_WGCNAMods.pdf", width=6,height=10)
+labeledHeatmap(Matrix=dispMat,
+               yLabels=rownames(dispMat),
+               yColorLabels=TRUE,
+               xLabels= colnames(dispMat),
+               colors=blueWhiteRed(40),
+               textMatrix = textMatrix1,
+               cex.lab.x=1.0,
+               zlim=c(-0.1,3),
+               main="Cell-type enrichment Heatmap")
+dev.off()
+
+#=====================================================================================
+#  Part 3: TOM network plot
+#  Plots all modules as a network with hub genes in the center surrounded
+#  by all other genes in the module.
+#=====================================================================================
+
+load("consensusTOM_final.rda")
+geneInfo.mayo <- read.csv("geneInfo.MAYO.csv")
+
+#Get the top connected genes in the module
+uniquemodcolors = unique(moduleColors.Mayo);
+uniquemodcolors <- uniquemodcolors[!uniquemodcolors %in% "grey"]
+TOM.matrix = as.matrix(consensusTOM_final);
+
+pdf("mayo_ModuleNetworks.pdf",height=9,width=10);
+for (mod in uniquemodcolors)  {
+  numgenesingraph = 100;
+  numconnections2keep = 1500;
+  cat('module:',mod,'\n');
+  geneInfo=geneInfo.mayo[geneInfo.mayo$GeneSymbol!="NA",]
+  colind = which(colnames(geneInfo.mayo)==paste("kME",mod, sep=""));
+  rowind = which(geneInfo.mayo[,4]==mod);
+  cat(' ',length(rowind),'probes in module\n');
+  submatrix = geneInfo.mayo[rowind,];
+  orderind = order(submatrix[,colind],decreasing=TRUE);
+  if (length(rowind) < numgenesingraph) {
+    numgenesingraph = length(rowind);
+    numconnections2keep = numgenesingraph * (numgenesingraph - 1);
+  }
+  cat('Making network graphs, using top',numgenesingraph,'probes and',numconnections2keep,'connections of TOM\n');
+  submatrix = submatrix[orderind[1:numgenesingraph],];
+
+  #Identify the columns in the TOM that correspond to these hub probes
+  matchind = match(submatrix$Ensembl.Gene.ID,colnames(datExpr.Ref));
+  reducedTOM = TOM.matrix[matchind,matchind];
+
+  orderind = order(reducedTOM,decreasing=TRUE);
+  connections2keep = orderind[1:numconnections2keep];
+  reducedTOM = matrix(0,nrow(reducedTOM),ncol(reducedTOM));
+  reducedTOM[connections2keep] = 1;
+
+  g0 <- graph.adjacency(as.matrix(reducedTOM[1:10,1:10]),mode="undirected",weighted=TRUE,diag=FALSE)
+  layoutMata <- layout.circle(g0)
+
+  g0 <- graph.adjacency(as.matrix(reducedTOM[11:50,11:50]),mode="undirected",weighted=TRUE,diag=FALSE)
+  layoutMatb <- layout.circle(g0)
+
+  g0 <- graph.adjacency(as.matrix(reducedTOM[51:ncol(reducedTOM),51:ncol(reducedTOM)]),mode="undirected",weighted=TRUE,diag=FALSE)
+  layoutMatc <- layout.circle(g0)
+  g1 <- graph.adjacency(as.matrix(reducedTOM),mode="undirected",weighted=TRUE,diag=FALSE)
+  layoutMat <- rbind(layoutMata*0.25,layoutMatb*0.8, layoutMatc)
+
+  plot(g1,edge.color="grey",vertex.color=mod,vertex.label=as.character(submatrix$GeneSymbol),vertex.label.cex=0.7,vertex.label.dist=0.45,vertex.label.degree=-pi/4,vertex.label.color="black",layout= layoutMat,vertex.size=submatrix[,colind]^2*8,main=paste(mod,"module"))
+
+}
+dev.off();

@@ -804,7 +804,8 @@ for (i in 1:length(multiTest))
   multiTest[[i]] <- datKME[datKME[,2]==namestestlist[i],1]
 }
 
-datCells <- read.csv("/home/vivek//bin/ZhangEtAlCellTypeList_humanENSG.csv") ## From Zhang et al., 2014 - ## CSV file with reference genes in 1st column, annotated list with Category in 2nd
+## From Zhang et al., 2014 - ## CSV file with reference genes in 1st column, annotated list with Category in 2nd
+datCells <- read.csv("/home/vivek//bin/ZhangEtAlCellTypeList_humanENSG.csv")
 
 ## Set up reference lists
 namesreflist <- names(table(datCells[,2])) ## category or module color
