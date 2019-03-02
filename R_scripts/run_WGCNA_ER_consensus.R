@@ -522,7 +522,6 @@ txtMat1[txtMat1 > -0.3&txtMat1<0.2] <- ""
 textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(moduleTraitPvalue_MAYO))
 
-#make a change
 
 #Plot heatmap
 pdf(paste('NetworkPlot_MAYO_consensus_01.16.19.pdf'),width=16,height=30)

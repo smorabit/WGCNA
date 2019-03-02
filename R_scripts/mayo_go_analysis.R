@@ -39,7 +39,83 @@ plotDendroAndColors(consTree, mColorh2, groupLabels = mLabelh2,addGuide=TRUE,den
 dev.off()
 
 #=====================================================================================
-#  Part 1: GO analysis
+#  Part 1: Module-trait relationship
+#=====================================================================================
+nSamples = nrow(datExpr.Ref)
+nGenes = ncol(datExpr.Ref)
+
+# get lists of relevant traits from metadata object, then collapse into one table
+Diagnosis <- as.numeric(relevel(as.factor(targets.Ref$Diagnosis),'CONTROL'))
+Age <- as.numeric(targets.Ref$AgeAtDeath)
+RIN <- as.numeric(targets.Ref$RIN)
+RIN2 <- as.numeric(targets.Ref$RIN2)
+Gender <- as.numeric(as.factor(targets.Ref$Gender))
+reads_aligned <- as.numeric(targets.Ref$PCT_PF_READS_ALIGNED)
+intergenic_bases <- as.numeric(targets.Ref$PCT_INTERGENIC_BASES)
+intronic_bases <- as.numeric(targets.Ref$PCT_INTRONIC_BASES)
+coding_bases <- as.numeric(targets.Ref$PCT_CODING_BASES)
+ribosomal_bases <- as.numeric(targets.Ref$PCT_RIBOSOMAL_BASES)
+traits_table <- cbind(Diagnosis, Age, RIN, RIN2, Gender, reads_aligned, intergenic_bases,
+                      intronic_bases, coding_bases, ribosomal_bases)
+
+# correlate PCs to traits
+PCvalues <- MEs.cons_Ref[,-ncol(MEs.cons_Ref)]
+moduleTraitCor_MAYO <- cor(PCvalues, traits_table, use='p')
+moduleTraitPvalue_MAYO <- corPvalueStudent(moduleTraitCor_MAYO, nSamples)
+colnames(moduleTraitCor_MAYO) <- paste("p.value", colnames(moduleTraitCor_MAYO), sep="")
+
+## Use the text function with the FDR filter in labeledHeatmap to add asterisks, e.g.
+txtMat <-  signif(moduleTraitPvalue_MAYO, 2)
+txtMat[txtMat>=0.05] <- ""
+txtMat[txtMat <0.05&txtMat >0.01] <- "*"
+txtMat[txtMat <0.01&txtMat >0.005] <- "**"
+#txtMat[txtMat <0.005&txtMat >0] <- "***"
+
+txtMat1 <- signif( moduleTraitCor_MAYO,2)
+
+#we only want to look at pearson correlations in certain range
+txtMat1[txtMat1 > -0.3&txtMat1<0.2] <- ""
+textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
+textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(moduleTraitPvalue_MAYO))
+
+#Plot heatmap
+pdf(paste('module_trait_correlation_MAYO.pdf'),width=16,height=30)
+par( mar = c(8, 12, 3, 3) );
+labeledHeatmap(Matrix = moduleTraitCor_MAYO,
+                xLabels = colnames(traits_table),
+                yLabels = rownames(moduleTraitPvalue_MAYO),
+                ySymbols = rownames(moduleTraitPvalue_MAYO),
+                colorLabels = FALSE,
+                colors = blueWhiteRed(50),
+                textMatrix = textMatrix1,
+                setStdMargins = FALSE,
+                cex.text = 1.5,
+                zlim = c(-1, 1),
+                cex.lab.x = 1.2,
+                main = paste("Module-trait relationships")
+)
+
+#Plot eigengene heatmap
+par(cex = 1.0)
+plotEigengeneNetworks(MEs.cons_Ref, "Eigengene Network", marHeatmap = c(3,4,2,2),
+                      marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
+                      xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
+
+#Plot boxplots, scatterplots
+toplot=t(MEs.cons_Ref)
+cols=substring(colnames(MEs.cons_Ref),3,20)
+par(mfrow=c(4,4))
+par(mar=c(5,6,4,2))
+for (i in 1:nrow(toplot)) {
+  boxplot(toplot[i,]~factor(as.vector(as.factor(targets.Ref$Diagnosis)),c('CONTROL','AD')),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+  verboseScatterplot(x=as.numeric(targets.Ref$AgeAtDeath),y=toplot[i,],xlab="Age",ylab="ME",abline=TRUE,cex.axis=1,cex.lab=1,cex=1,col=cols[i],pch=19)
+  boxplot(toplot[i,]~factor(targets.Ref$Gender),col=cols[i],ylab="ME",main=rownames(toplot)[i],xlab=NULL,las=2)
+}
+
+dev.off()
+
+#=====================================================================================
+#  Part 2: GO analysis
 #=====================================================================================
 
 geneInfo.mayo <- read.csv("geneInfo.MAYO.csv")
@@ -80,24 +156,15 @@ system(paste("nohup python ",codedir,"/GO_Elite.py --species Hs --mod Ensembl --
 
 
 # Plotting the GO Output
-pathname <- "~/WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
+pathname <- "~/mayo_WGCNA/geneInfo/output/GO-Elite_results/CompleteResults"
 
-uniquemodcolors=uniquemodcolors[-c(2, 14)] # For some reason sometimes modules are not run correctly, therefore won't be able to be plotted so they are excluded
+#had to get rid of cyan, yellow, lightgreen, blue, salmon
+uniquemodcolors <- uniquemodcolors[uniquemodcolors!='salmon']
 
-#manually set uniquemodcolors:
-uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
-                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
-                    "pink", "purple", "royalblue", "tan", "grey60")
-
-#for some reason the royalblue module gives errors so I removed that for now
-uniquemodcolors = c("black", "brown", "darkgreen", "darkred", "darkturquoise", "greenyellow",
-                    "lightcyan", "lightgreen", "lightyellow", "magenta", "midnightblue", "orange",
-                    "pink", "purple", "tan", "grey60")
-
-
-pdf("GOElite_plot_Modules_01.23.19.pdf",height=8,width=12)
+pdf("GOElite_plot_Modules.pdf",height=8,width=12)
 for(i in 1:length(uniquemodcolors)){
   thismod = uniquemodcolors[i]
+  cat('Starting ...',thismod,'\n')
   tmp=read.csv(file=paste(pathname,"/ORA_pruned/",thismod,"_Module-GO_z-score_elite.txt",sep=""),sep="\t")
   tmp=subset(tmp,Ontology.Type!='cellular_component')
   tmp=tmp[,c(2,9)] ## Select GO-terms and Z-score
@@ -106,14 +173,15 @@ for(i in 1:length(uniquemodcolors)){
     tmp1=tmp ## Take top 10 Z-score
     tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
     par(mar=c(5,40,5,2))
-    barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
-    abline(v=2,col="red")
+    #barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
+    barplot(tmp1$Z.Score,horiz=T,col=thismod,names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
+    abline(v=2,col="black")
   } else {
     tmp1=tmp[c(1:10),] ## Take top 10 Z-score
     tmp1 = tmp1[order(tmp1$Z.Score),] ##Re-arrange by increasing Z-score
     par(mar=c(5,40,5,2))
-    barplot(tmp1$Z.Score,horiz=T,col="blue",names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
-    abline(v=2,col="red")
+    barplot(tmp1$Z.Score,horiz=T,col=thismod,names.arg= tmp1$Ontology.Name,cex.names=1.2,las=1,main=paste("Gene Ontology Plot of",thismod,"Module"),xlab="Z-Score")
+    abline(v=2,col="black")
     }
 
   cat('Done ...',thismod,'\n')
@@ -122,7 +190,7 @@ for(i in 1:length(uniquemodcolors)){
 dev.off()
 
 #=====================================================================================
-#  Part 2: Cell type enrichment
+#  Part 3: Cell type enrichment
 #=====================================================================================
 geneInfo <- read.csv('geneInfo.MAYO.csv')
 
@@ -212,7 +280,7 @@ labeledHeatmap(Matrix=dispMat,
 dev.off()
 
 #=====================================================================================
-#  Part 3: TOM network plot
+#  Part 4: TOM network plot
 #  Plots all modules as a network with hub genes in the center surrounded
 #  by all other genes in the module.
 #=====================================================================================
