@@ -4,39 +4,13 @@ library(gplots)
 library(cluster)
 library(igraph); #for part 8
 library(RColorBrewer); #for part 8
+library(RegFacEnc)
+
 options(stringsAsFactors=FALSE)
 enableWGCNAThreads()
 
-#=====================================================================================
-#  Part 0: Create geneInfo.cons dataframe from ME and datExpr objects
-#=====================================================================================
 
-# load relevant .rda files:
-load("rWGCNA_Mayo_ForPreservation.rda")
-load("rWGCNA.rda")
-
-# Convert Ensembl gene ID to gene names
-ensembl <- read.csv("ENSG85_Human.csv.gz")
-
-# compute signed eigengene based connectivity (also known as module membership)
-kme <- signedKME(datExpr.Ref, MEs.cons_Ref)
-
-# get gene names based on ensembl ID in our datExpr object:
-geneNames <- ensembl$Associated.Gene.Name[match(colnames(datExpr.Ref), ensembl$Ensembl.Gene.ID)]
-
-# put relevant info into a dataframe, then save it!
-geneInfo.mayo <- as.data.frame(cbind(colnames(datExpr.Ref), geneNames, moduleColors.cons, kme))
-colnames(geneInfo.mayo)[1]= "Ensembl.Gene.ID"
-colnames(geneInfo.mayo)[2]= "GeneSymbol"
-colnames(geneInfo.mayo)[3]= "Initially.Assigned.Module.Color"
-
-#Final annotated geneInfo file is input to the rest of the analysis
-write.csv(geneInfo.mayo,'geneInfo.MAYO.csv')
-
-#plot dendrogram
-pdf("mayo_rWGCNA_dendrogram.pdf",height=10,width=16)
-plotDendroAndColors(consTree, mColorh2, groupLabels = mLabelh2,addGuide=TRUE,dendroLabels=FALSE,main= paste("Mayo rWGCNA signed bicor network with mms=",mms,"ds=",ds,"dthresh=",dthresh,"cquant=0.2"));
-dev.off()
+load("/home/vivek/AMP_AD/Mayo/Analysis/Step04_WGCNA/Discovery_Set/AD/rWGCNA_Mayo_ForPreservation.rda")
 
 #=====================================================================================
 #  Part 1: Module-trait relationship
@@ -120,10 +94,10 @@ dev.off()
 
 geneInfo.mayo <- read.csv("geneInfo.MAYO.csv")
 
-# dir.create("./geneInfo")
-# dir.create("./geneInfo/background/")
-# dir.create("./geneInfo/input/")
-# dir.create("./geneInfo/output/")
+dir.create("./geneInfo2")
+dir.create("./geneInfo2/background/")
+dir.create("./geneInfo2/input/")
+dir.create("./geneInfo2/output/")
 
 geneInfo.mayo$SystemCode <- rep("En",length=nrow(geneInfo.mayo))
 background <- geneInfo.mayo[,"Ensembl.Gene.ID"]
@@ -132,7 +106,7 @@ background <- as.data.frame(background)
 ## Output files for GO elite
 background <- cbind(background,rep("En",length=length(background)))
 colnames(background) <- c("Source Identifier","SystemCode")
-write.table(background,"./geneInfo/background/denominator.txt",row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
+write.table(background,"./geneInfo2/background/denominator.txt",row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
 
 uniquemodcolors <- unique(moduleColors.Mayo)
 uniquemodcolors <- uniquemodcolors[uniquemodcolors!='grey'] #do I need to exclude grey60?
@@ -143,12 +117,12 @@ for(i in 1:length(uniquemodcolors)){
   ind=which(colnames(geneInfo.mayo)==paste("kME",thismod,sep=""))
   thisInfo=geneInfo.mayo[geneInfo.mayo$Initially.Assigned.Module.Color==thismod, c(1, dim(geneInfo.mayo)[2], ind)]
   colnames(thisInfo) <- c("Source Identifier","SystemCode","kME")
-  write.table(thisInfo,file=paste("./geneInfo/input/",thismod,"_Module.txt",sep=""),row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
+  write.table(thisInfo,file=paste("./geneInfo2/input/",thismod,"_Module.txt",sep=""),row.names=FALSE,col.names=TRUE,quote=FALSE,sep="\t")
 }
 
 # Run GO elite as nohupped shell script:
 codedir <- "/home/vivek/bin/GO-Elite_v.1.2.5-Py"
-pathname <- "~/mayo_WGCNA/geneInfo"
+pathname <- "~/mayo_WGCNA/geneInfo2"
 nperm=10000
 system(paste("nohup python ",codedir,"/GO_Elite.py --species Hs --mod Ensembl --permutations ",
              nperm,"  --method \"z-score\" --zscore 1.96 --pval 0.01 --num 5 --input ",pathname,

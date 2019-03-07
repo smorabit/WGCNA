@@ -170,7 +170,6 @@ plotDendroAndColors(geneTree, mColorh1, groupLabels = mLabelh1,addGuide=TRUE,den
 dev.off()
 
 ### selecting parameters for the final dendrogram based on observations ###
-
 #select dendrogram parameters
 mms <- 100
 ds <- 4
