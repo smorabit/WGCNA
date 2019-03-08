@@ -21,18 +21,66 @@ BiocManager::install("pcaMethods")
 install.packages("MEET")
 install.packages("Cairo")
 
-for(i in 1:length(my.modules)){
-  mymods <- my.modules[i]
-  TFBSenrich (user.file=paste(mymods,"_TFBS_user.file.csv",sep=""),
-      TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"),
-      TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),
-      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"),
-      cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
-      chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
-      pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
-}
+# # this for loop just doesn't work because R is dumb
+# for(i in 1:length(my.modules)){
+#   mymods <- my.modules[i]
+# 	paste(mymods, i)
+# 	getwd()
+#   TFBSenrich (user.file=paste(mymods,"_TFBS_user.file.csv",sep=""),
+#       TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"),
+#       TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),
+#       db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"),
+#       cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+#       chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+#       pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+# 	setwd("~/mayo_WGCNA/TFBS/")
+# }
 
+TFBSenrich (user.file="purple_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+           chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+           pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
 
-#TFBSenrich (user.file="lightgreen_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
-#            chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
-#            pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+TFBSenrich (user.file="turquoise_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+          chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+          pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="cyan_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+           chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+           pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="black_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+          chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+          pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="pink_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+           chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+           pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="yellow_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+          chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+          pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+TFBSenrich (user.file="magenta_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+           chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+           pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="darkred_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+          chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+          pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="skyblue_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+           chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+           pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")
+
+TFBSenrich (user.file="green_TFBS_user.file.csv", TF.db=system.file("data/JASPAR_CLOVER",package="RegFacEnc"), TF.nome=system.file("data/JASPAR_NOMENCLATURE_TABLE",package="RegFacEnc"),                      db.seq=system.file("data/UP1000_Protien_Coding_HUMANS_unique.fasta",package="RegFacEnc"), cpg.seq=system.file("data/HUMAN_CpG.fa",package="RegFacEnc"),
+          chro.seq=system.file("data/HUMAN_chr20.fa",package="RegFacEnc"),option= "-t",
+          pval = "0.05", species = "Human", TF_motifs="JASPAR", BF_Type="Protein Coding")
+setwd("~/mayo_WGCNA/TFBS/")

@@ -19,21 +19,22 @@ nSamples = nrow(datExpr.Ref)
 nGenes = ncol(datExpr.Ref)
 
 # get lists of relevant traits from metadata object, then collapse into one table
-Diagnosis <- as.numeric(relevel(as.factor(targets.Ref$Diagnosis),'CONTROL'))
+Diagnosis <- as.numeric(relevel(as.factor(targets.Ref$Diagnosis),'Control'))
 Age <- as.numeric(targets.Ref$AgeAtDeath)
 RIN <- as.numeric(targets.Ref$RIN)
-RIN2 <- as.numeric(targets.Ref$RIN2)
 Gender <- as.numeric(as.factor(targets.Ref$Gender))
 reads_aligned <- as.numeric(targets.Ref$PCT_PF_READS_ALIGNED)
 intergenic_bases <- as.numeric(targets.Ref$PCT_INTERGENIC_BASES)
 intronic_bases <- as.numeric(targets.Ref$PCT_INTRONIC_BASES)
 coding_bases <- as.numeric(targets.Ref$PCT_CODING_BASES)
 ribosomal_bases <- as.numeric(targets.Ref$PCT_RIBOSOMAL_BASES)
-traits_table <- cbind(Diagnosis, Age, RIN, RIN2, Gender, reads_aligned, intergenic_bases,
-                      intronic_bases, coding_bases, ribosomal_bases)
+pc1 <- as.numeric(targets.Ref$Seq.PC1)
+pc2 <- as.numeric(targets.Ref$Seq.PC2)
+traits_table <- cbind(Diagnosis, Age, RIN, Gender, reads_aligned, intergenic_bases,
+                      intronic_bases, coding_bases, ribosomal_bases, pc1, pc2)
 
 # correlate PCs to traits
-PCvalues <- MEs.cons_Ref[,-ncol(MEs.cons_Ref)]
+PCvalues <- MEs.Mayo[,-ncol(MEs.Mayo)]
 moduleTraitCor_MAYO <- cor(PCvalues, traits_table, use='p')
 moduleTraitPvalue_MAYO <- corPvalueStudent(moduleTraitCor_MAYO, nSamples)
 colnames(moduleTraitCor_MAYO) <- paste("p.value", colnames(moduleTraitCor_MAYO), sep="")
@@ -53,7 +54,7 @@ textMatrix1 = paste( txtMat1, '\n', '(',txtMat ,')', sep = '');
 textMatrix1= matrix(textMatrix1,ncol=ncol( moduleTraitPvalue_MAYO),nrow=nrow(moduleTraitPvalue_MAYO))
 
 #Plot heatmap
-pdf(paste('module_trait_correlation_MAYO.pdf'),width=16,height=30)
+pdf(paste('module_trait_correlation_MAYO_03.07.19.pdf'),width=16,height=30)
 par( mar = c(8, 12, 3, 3) );
 labeledHeatmap(Matrix = moduleTraitCor_MAYO,
                 xLabels = colnames(traits_table),
@@ -71,13 +72,13 @@ labeledHeatmap(Matrix = moduleTraitCor_MAYO,
 
 #Plot eigengene heatmap
 par(cex = 1.0)
-plotEigengeneNetworks(MEs.cons_Ref, "Eigengene Network", marHeatmap = c(3,4,2,2),
+plotEigengeneNetworks(MEs.Mayo, "Eigengene Network", marHeatmap = c(3,4,2,2),
                       marDendro = c(0,4,1,2),cex.adjacency = 0.3,plotDendrograms = TRUE,
                       xLabelsAngle = 90,heatmapColors=blueWhiteRed(100)[51:100])
 
 #Plot boxplots, scatterplots
-toplot=t(MEs.cons_Ref)
-cols=substring(colnames(MEs.cons_Ref),3,20)
+toplot=t(MEs.Mayo)
+cols=substring(colnames(MEs.Mayo),3,20)
 par(mfrow=c(4,4))
 par(mar=c(5,6,4,2))
 for (i in 1:nrow(toplot)) {

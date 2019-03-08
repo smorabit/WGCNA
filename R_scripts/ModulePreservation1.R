@@ -25,7 +25,6 @@ multiColors=list(Mayo.AD = moduleColors.Mayo)
 filename="mp_Zhang_Mayo_AD.rda"
 save(list=ls(),file=filename)
 
-
 ################Mt Sinai STG region
 library(WGCNA)
 
