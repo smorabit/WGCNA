@@ -13,7 +13,7 @@ At yesterday's lab meeting we discussed the paper [Integrative transcriptome ana
 
 I began working on a script to use variancePartition on the Mayo dataset MEs, producing the following figures:
 
-![image1](figures/mayo_variance_fraction.png =475x) ![image2](figures/mayo_variance_partition.png =475x)
+![image1](figures/mayo_variance_fraction.png?raw=true =475x) ![image2](figures/mayo_variance_partition.png?raw=true =475x)
 
 The next step is to project the MEs from the Mayo dataset onto the ROSMAP data, since there is metadata pertaining to immunohistochemistry for things like amyloid burden, tangle burden, neuritic plaques etc.
 
