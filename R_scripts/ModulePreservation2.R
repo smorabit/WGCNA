@@ -1,6 +1,6 @@
 
 library(WGCNA)
-load('mp_rTG4510mouse_Mayo_AD.rda') ### load corresponding file for each module preservation data
+load('mp_ROSMAP_Mayo_AD.rda') ### load corresponding file for each module preservation data
 mp=modulePreservation(multiExpr,multiColors,referenceNetworks=1,nPermutations=1000,networkType = "signed", corFnc="bicor",randomSeed=1,quickCor=0,verbose=3)
 save(list=ls(),file=filename)
 

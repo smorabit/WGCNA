@@ -18,3 +18,12 @@ I began working on a script to use variancePartition on the Mayo dataset MEs, pr
 The next step is to project the MEs from the Mayo dataset onto the ROSMAP data, since there is metadata pertaining to immunohistochemistry for things like amyloid burden, tangle burden, neuritic plaques etc.
 
 ---
+### 03/12/19
+
+Today I worked on projecting MEs from the Mayo dataset onto ROSMAP data, and then examining the variance within the data attributed to several features describing the ROSMAP samples. The features we are particularly interested are burden of neuritic plaques and tangles.
+
+I was able to project the modules onto the ROSMAP data, and then run the variancePartition package on these MEs, but the output did not look so good. Every feature tested was hovering around zero variance with residuals at nearly 100%.
+
+Next I tried to run variancePartition just using the ROSMAP gene expression data, but I couldn't get it to run. It isn't providing any error messages which is frustrating. I think next I am going to try running module preservation on the the ROSMAP/MAYO MEs. Maybe the modules are just not preserved and don't really mean anything in the context of ROSMAP...? Although I doubt it.
+
+In the time that I started writing this entry I just began running module preservation so we'll se how that goes tomorrow morning.
